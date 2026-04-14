@@ -1,7 +1,9 @@
 #include <ncurses.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 
 static WINDOW* create_newwin(int height, int width, int starty, int startx);
@@ -21,38 +23,79 @@ static size_t      i    = 0;
 #define STARTX ((COLS - WIDTH) / 2)
 
 
+static struct timespec start, now;
+static bool            started = false;
+static float           elapsed = 0.0F;
+
 int main(void)
 {
     initscr();
     noecho();
     cbreak();
     keypad(stdscr, TRUE);
+    timeout(100);
+    refresh();
 
-    refresh();      // refresh stdscr
-    // create main window that will hold the text
-    WINDOW* main_window = create_newwin(HEIGHT, WIDTH, STARTY, STARTX);
+    WINDOW* text_win   = create_newwin(HEIGHT - 3, WIDTH, STARTY, STARTX);
+    WINDOW* status_win = create_newwin(3, WIDTH, STARTY + HEIGHT - 3, STARTX);
 
     size_t text_len = strlen(text);
+    mvwprintw(text_win, 2, 2, "%s", text);
+    wrefresh(text_win);
 
-    // Draw text once, outside loop
-    mvwprintw(main_window, 2, 2, "%s", text);
-    wrefresh(main_window);
 
     int c = 0;
-    while (c != 'q' && i < text_len) 
-    {
+    while (1) {
+        if (started) {
+            timespec_get(&start, TIME_UTC);
+            elapsed = (now.tv_sec - start.tv_sec) + (now.tv_nsec - start.tv_nsec) / 1e9;
+        }
+
+        if (started && elapsed >= 15.0) {
+            break;
+        }
+        if (i >= text_len) {
+            break;
+        }
+
+        if (started) {
+            mvwprintw(status_win, 1, 2, "Time: %.0f ", 15.0 - elapsed);
+        } else {
+            mvwprintw(status_win, 1, 2, "Time: 15   ");
+        }
+        wrefresh(status_win);
+
         c = getch();
-        if (c == text[i]) 
-        {
-            mvwaddch(main_window, 2, 2 + i, (chtype)c | A_BOLD);
-            mvwaddch(main_window, 2, 3 + i, (chtype)text[i + 1] | A_UNDERLINE);
-            wrefresh(main_window);
+        if (c == ERR) {
+            continue;
+        }
+        if (c == 'q') {
+            break;
+        }
+
+        if (c == text[i]) {
+            if (!started) {
+                timespec_get(&now, TIME_UTC);
+                started = true;
+            }
+            mvwaddch(text_win, 2, 2 + i, (chtype)c | A_BOLD);
+            wrefresh(text_win);
             i++;
         }
     }
 
-    destroy_win(main_window);
+    destroy_win(text_win);
+    destroy_win(status_win);
     endwin();
+
+    if (started) {
+        float duration = elapsed < 15.0 ? elapsed : 15.0F;
+        float wpm      = ((float)i / 5.0F) / (duration / 60.0F);
+        printf("Typed: %zu chars | WPM: %.1f\n", i, wpm);
+    } else {
+        printf("Test not started.\n");
+    }
+
     return 0;
 }
 
@@ -71,4 +114,3 @@ void destroy_win(WINDOW* local_win)
     wrefresh(local_win);
     delwin(local_win);
 }
-
