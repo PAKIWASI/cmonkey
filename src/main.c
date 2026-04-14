@@ -33,7 +33,7 @@ int main(void)
     noecho();
     cbreak();
     keypad(stdscr, TRUE);
-    timeout(100);
+    timeout(100);       // timeout for getch (it blocks)
     refresh();
 
     WINDOW* text_win   = create_newwin(HEIGHT - 3, WIDTH, STARTY, STARTX);

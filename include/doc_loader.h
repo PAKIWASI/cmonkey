@@ -2,6 +2,7 @@
 #define DOC_LOADER
 
 
+
 void load_from_doc(String* str, const char* filepath);
 
 
