@@ -2,7 +2,6 @@
 #define JSON_WORDBANK_LOADER_H
 
 #include "gen_vector_single.h"
-#include "String_single.h"
 #include "arena_single.h"
 
 
@@ -12,7 +11,6 @@ typedef struct {
 } WordBank;
 
 
-
 // Load entire JSON word list into memory
 WordBank* wordbank_create(const char* filename);
 
@@ -20,11 +18,10 @@ WordBank* wordbank_create(const char* filename);
 void wordbank_destroy(WordBank* wb);
 
 // Get a single random word
-String* wordbank_random_word(WordBank* wb);
+const char* wordbank_random_word(WordBank* wb);
 
 // Get N random unique words
 // Words are selected without replacement
-// TODO: we should replace from time to time
 genVec* wordbank_random_words(WordBank* wb, u32 count);
 
 

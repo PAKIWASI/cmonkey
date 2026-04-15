@@ -27,10 +27,8 @@ set(CMAKE_EXE_LINKER_FLAGS_RELEASE "")
 
 
 set(SRC_FILES
-    # learn/learn1.c
-    # learn/learn2.c
-    # learn/learn3.c
-    # learn/learn4.c
+    src/json_wordbank_loader.c
+    src/wc_imp.c
 )
 
 add_executable(main
@@ -40,3 +38,5 @@ add_executable(main
 
 
 target_include_directories(main PRIVATE include external)
+
+
