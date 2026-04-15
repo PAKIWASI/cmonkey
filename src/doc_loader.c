@@ -1,33 +1,44 @@
+#include "jsmn.h"
+#include "doc_loader.h"
+
 #include <stdio.h>
 #include <string.h>
-#include "jsmn.h"
 
 
-static int jsoneq(const char *json, jsmntok_t *tok, const char *s) 
+
+static bool jsoneq(const char *json, jsmntok_t *tok, const char *s) 
 {
     if (tok->type == JSMN_STRING &&
-        (int)strlen(s) == tok->end - tok->start &&
-        strncmp(json + tok->start, s, tok->end - tok->start) == 0) {
-        return 0;
+        strlen(s) == (u32)(tok->end - tok->start) &&
+        strncmp(json + tok->start, s, (u32)(tok->end - tok->start)) == 0) {
+        return true;
     }
-    return -1;
+    return false;
 }
 
 // TODO: instead of loading entire file into memory,
 // why don't we just load random words (offsets)
-// but that would have a performance penalty for user who takes
-// multiple tests
+// but that would have a performance penalty for user who takes multiple tests
+// we can circumvent that by loading 2 tests at a time and when user doing 2nd test,
+// we load 2 more tests in the background
 
 
-static long file_size(FILE *f) {
+static u32 file_size(FILE *f) 
+{
     fseek(f, 0, SEEK_END);
-    long size = ftell(f);
-    rewind(f);
+    u32 size = (u32)ftell(f);
+    fseek(f, 0, SEEK_SET);
     return size;
 }
 
-int run() 
+
+bool load_from_doc(const char* filename)
 {
+    FILE* f = fopen(filename, "r"); 
+    if (!f) { return false; }
+
+    u32 size_bytes = file_size(f);
+
     const char *json = /* your JSON string here */;
 
     jsmn_parser parser;
@@ -39,17 +50,19 @@ int run()
 
     if (count < 0) {
         printf("Failed to parse JSON\n");
-        return 1;
+        return false;
     }
 
-    for (int i = 1; i < count; i++) {
-        if (jsoneq(json, &tokens[i], "words") == 0) {
-
+    // TODO: how to find number of items in words arr ?
+    for (int i = 1; i < count; i++) 
+    {
+        if (jsoneq(json, &tokens[i], "words")) 
+        {
             jsmntok_t *array = &tokens[i + 1];
 
             if (array->type != JSMN_ARRAY) {
                 printf("words is not an array\n");
-                return 1;
+                return false;
             }
 
             int idx = i + 2;
@@ -66,5 +79,7 @@ int run()
         }
     }
 
-    return 0;
+    fclose(f);
+    return true;
 }
+
