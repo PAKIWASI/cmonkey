@@ -43,6 +43,7 @@ typedef struct {
     struct timespec start_time;
     float           elapsed_s;
 
+    // TODO: words/accuracy?
     // stats
     u32   correct_chars;
     u32   total_chars_typed;

@@ -4,12 +4,19 @@
 #include <ncurses.h>
 #include "game.h"
 
+// TODO: theming: file import based theming
+
+
 // Holds all ncurses window handles.
 typedef struct {
     WINDOW* header;   // top bar: title + time
     WINDOW* text;     // word display area
     WINDOW* status;   // bottom bar: WPM / accuracy / instructions
 } UI;
+
+// TODO: current color ? (if user typed wrong char, we want that to be red)
+
+
 
 void ui_init(UI* ui);
 

@@ -135,9 +135,6 @@ WordBank* wordbank_create(const char* filename)
         goto cleanup;
     }
 
-    // BUG: wrong
-    printf("\nnum_words: %d\n", num_words);
-
     // Allocate WordBank and arena
     WordBank* wb = malloc(sizeof(WordBank));
     if (!wb) {
@@ -181,23 +178,15 @@ WordBank* wordbank_create(const char* filename)
         memcpy(dest, json_buf + t->start, (size_t)wlen);
         dest[wlen] = '\0';
 
-        // BUG: does print all words correctly but arena used is wrong
-        printf("%d: %s: %lu\n", i, dest, arena_used(wb->arena));
-        
         genVec_push(wb->words, (u8*)&offset);
         found++;
     }
-
-    // BUG: indexes wrong
-    genVec_print(wb->words, wc_print_u32);
-    putchar('\n');
 
     // Free temporaries — all string data is now in the arena
     free(toks);
     free(json_buf);
 
-    // BUG: shows 5 bytes
-    LOG("wordbank: loaded %u words (%lu bytes)", found, arena_used(wb->arena));
+    // LOG("wordbank: loaded %u words (%lu bytes)", found, arena_used(wb->arena));
     return wb;
 
 cleanup:

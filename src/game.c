@@ -32,16 +32,19 @@ void game_destroy(Game* g)
 
 void game_new_round(Game* g)
 {
-    if (g->indices) { genVec_destroy(g->indices); }
+    // TODO: kinda inafficient
+    if (g->indices) {
+        genVec_destroy(g->indices);
+    }
     g->indices    = wordbank_random_words(g->bank, GAME_WORD_COUNT);
     g->word_count = (u32)g->indices->size;
 
-    g->word_pos        = 0;
-    g->char_pos        = 0;
-    g->correct_chars   = 0;
+    g->word_pos          = 0;
+    g->char_pos          = 0;
+    g->correct_chars     = 0;
     g->total_chars_typed = 0;
-    g->elapsed_s       = 0.0f;
-    g->state           = GS_WAITING;
+    g->elapsed_s         = 0.0f;
+    g->state             = GS_WAITING;
 
     memset(g->results, WR_UNTOUCHED, sizeof(g->results));
 }
@@ -89,6 +92,8 @@ bool game_input(Game* g, int ch)
     if (g->char_pos < wlen) {
         if ((char)ch == word[g->char_pos]) {
             g->char_pos++;
+        } else {
+
         }
         // wrong char: don't advance (monkeytype-style: must retype correctly)
         // if you want lenient mode, just always increment char_pos here

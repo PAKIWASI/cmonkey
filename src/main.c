@@ -11,6 +11,7 @@ int main(void)
     game_init(&game, "/home/wasi/Documents/projects/c/cmonkey/data/english.json");
 
     bool running = true;
+    clear();
     while (running) {
 
         // render

@@ -9,5 +9,6 @@ int main(void)
 {
     json_file_suite();
 
+    WC_REPORT();
     return 0;
 }

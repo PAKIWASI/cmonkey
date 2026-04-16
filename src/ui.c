@@ -1,5 +1,6 @@
 #include "ui.h"
 #include "json_wordbank_loader.h"
+#include <ncurses.h>
 #include <string.h>
 
 // color pair IDs
@@ -15,10 +16,12 @@
 // Heights are fixed; widths stretch full terminal.
 #define HEADER_H  3
 #define STATUS_H  3
-// text window fills what's in between
 
-static int text_h(void) { return LINES - HEADER_H - STATUS_H; }
-static int text_y(void) { return HEADER_H; }
+// text window fills what's in between
+#define TEXTBOX_H (LINES / 2)
+#define TEXTBOX_W (COLS / 2)
+#define TEXTBOX_Y (((LINES - HEADER_H) / 2) - (TEXTBOX_H / 2))
+#define TEXTBOX_X (TEXTBOX_W - (TEXTBOX_W / 2))
 
 
 // window creation
@@ -37,7 +40,7 @@ static void rebuild_windows(UI* ui)
     if (ui->status) { delwin(ui->status); }
 
     ui->header = make_win(HEADER_H, COLS, 0,          0);
-    ui->text   = make_win(text_h(), COLS, text_y(),   0);
+    ui->text   = make_win(TEXTBOX_H, TEXTBOX_W, TEXTBOX_Y,   TEXTBOX_X);
     ui->status = make_win(STATUS_H, COLS, LINES - STATUS_H, 0);
 }
 
