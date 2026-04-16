@@ -3,6 +3,7 @@
 #include <ncurses.h>
 #include <string.h>
 
+
 // color pair IDs
 #define CP_NORMAL    1
 #define CP_CORRECT   2   // green
@@ -40,7 +41,7 @@ static void rebuild_windows(UI* ui)
     if (ui->status) { delwin(ui->status); }
 
     ui->header = make_win(HEADER_H, COLS, 0,          0);
-    ui->text   = make_win(TEXTBOX_H, TEXTBOX_W, TEXTBOX_Y,   TEXTBOX_X);
+    ui->text   = make_win(TEXTBOX_H, TEXTBOX_W, TEXTBOX_Y, TEXTBOX_X);
     ui->status = make_win(STATUS_H, COLS, LINES - STATUS_H, 0);
 }
 

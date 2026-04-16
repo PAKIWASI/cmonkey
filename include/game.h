@@ -1,7 +1,6 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include "common_single.h"
 #include "json_wordbank_loader.h"
 #include <time.h>
 
@@ -48,6 +47,7 @@ typedef struct {
     u32   correct_chars;
     u32   total_chars_typed;
 } Game;
+
 
 // api
 

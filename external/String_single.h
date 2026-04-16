@@ -31,28 +31,29 @@
 #include <stdlib.h>
 
 // ANSI Color Codes
-#define COLOR_RESET  "\033[0m"
-#define COLOR_RED    "\033[1;31m"
-#define COLOR_YELLOW "\033[1;33m"
-#define COLOR_GREEN  "\033[1;32m"
-#define COLOR_BLUE   "\033[1;34m"
-#define COLOR_CYAN   "\033[1;36m"
+#define WC_COLOR_RESET  "\033[0m"
+#define WC_COLOR_RED    "\033[1;31m"
+#define WC_COLOR_YELLOW "\033[1;33m"
+#define WC_COLOR_GREEN  "\033[1;32m"
+#define WC_COLOR_BLUE   "\033[1;34m"
+#define WC_COLOR_CYAN   "\033[1;36m"
+
 
 
 // TODO: warm paths ?
 
 #define WARN(fmt, ...)                                            \
     do {                                                          \
-        printf(COLOR_YELLOW "[WARN]"                              \
-                            " %s:%d:%s(): " fmt "\n" COLOR_RESET, \
+        printf(WC_COLOR_YELLOW "[WARN]"                              \
+                            " %s:%d:%s(): " fmt "\n" WC_COLOR_RESET, \
                __FILE__, __LINE__, __func__, ##__VA_ARGS__);      \
     } while (0)
 
 #define FATAL(fmt, ...)                                         \
     do {                                                        \
         fprintf(stderr,                                         \
-                COLOR_RED "[FATAL]"                             \
-                          " %s:%d:%s(): " fmt "\n" COLOR_RESET, \
+                WC_COLOR_RED "[FATAL]"                             \
+                          " %s:%d:%s(): " fmt "\n" WC_COLOR_RESET, \
                 __FILE__, __LINE__, __func__, ##__VA_ARGS__);   \
         exit(EXIT_FAILURE);                                     \
     } while (0)
@@ -81,8 +82,8 @@
 
 #define LOG(fmt, ...)                                       \
     do {                                                    \
-        printf(COLOR_CYAN "[LOG]"                           \
-                          " : %s(): " fmt "\n" COLOR_RESET, \
+        printf(WC_COLOR_CYAN "[LOG]"                           \
+                          " : %s(): " fmt "\n" WC_COLOR_RESET, \
                __func__, ##__VA_ARGS__);                    \
     } while (0)
 
@@ -514,7 +515,7 @@ _Thread_local wc_err wc_errno = WC_OK;
 #define STR_REMAINING(s)   ((s)->capacity - (s)->size)
 
 // Grow if full.
-#define MAYBE_GROW_STR(s)                     \
+#define MAYBE_GROW(s)                     \
     do {                                  \
         if ((s)->size >= (s)->capacity) { \
             if (IS_SSO(s)) {              \
@@ -755,7 +756,7 @@ void string_to_cstr_buf(const String* str, char* buff, u64 n)
     if (str->size > 0) {
         str_copy_n(buff, GET_STR(str), str->size);
     }
-    buff[n - 1] = '\0'; 
+    buff[str->size] = '\0'; 
 }
 
 char* string_data_ptr(const String* s)
@@ -774,7 +775,7 @@ char* string_data_ptr(const String* s)
 void string_append_char(String* s, char c)
 {
     CHECK_FATAL(!s, "str is null");
-    MAYBE_GROW_STR(s);
+    MAYBE_GROW(s);
     GET_STR_CHAR(s, s->size++) = c;
 }
 
@@ -835,7 +836,7 @@ void string_insert_char(String* s, u64 i, char c)
     CHECK_FATAL(!s, "str is null");
     CHECK_FATAL(i > s->size, "index out of bounds");
 
-    MAYBE_GROW_STR(s);
+    MAYBE_GROW(s);
 
     char* buf = GET_STR(s);
     // Shift right.

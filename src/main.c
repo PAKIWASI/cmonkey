@@ -10,8 +10,8 @@ int main(void)
     ui_init(&ui);
     game_init(&game, "/home/wasi/Documents/projects/c/cmonkey/data/english.json");
 
+    // clear();
     bool running = true;
-    clear();
     while (running) {
 
         // render
