@@ -514,7 +514,7 @@ _Thread_local wc_err wc_errno = WC_OK;
 #define STR_REMAINING(s)   ((s)->capacity - (s)->size)
 
 // Grow if full.
-#define MAYBE_GROW(s)                     \
+#define MAYBE_GROW_STR(s)                     \
     do {                                  \
         if ((s)->size >= (s)->capacity) { \
             if (IS_SSO(s)) {              \
@@ -774,7 +774,7 @@ char* string_data_ptr(const String* s)
 void string_append_char(String* s, char c)
 {
     CHECK_FATAL(!s, "str is null");
-    MAYBE_GROW(s);
+    MAYBE_GROW_STR(s);
     GET_STR_CHAR(s, s->size++) = c;
 }
 
@@ -835,7 +835,7 @@ void string_insert_char(String* s, u64 i, char c)
     CHECK_FATAL(!s, "str is null");
     CHECK_FATAL(i > s->size, "index out of bounds");
 
-    MAYBE_GROW(s);
+    MAYBE_GROW_STR(s);
 
     char* buf = GET_STR(s);
     // Shift right.

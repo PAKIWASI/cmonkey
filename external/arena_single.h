@@ -327,8 +327,12 @@ typedef struct {
 
 
 // Tweakable settings
-#define ARENA_DEFAULT_ALIGNMENT (sizeof(u64)) // 8 byte
-#define ARENA_DEFAULT_SIZE      (nKB(4))      // 4 KB
+#ifndef ARENA_DEFAULT_ALIGNMENT
+    #define ARENA_DEFAULT_ALIGNMENT (sizeof(u64)) // 8 byte
+#endif
+#ifndef ARENA_DEFAULT_SIZE
+    #define ARENA_DEFAULT_SIZE      (nKB(4))      // 4 KB
+#endif
 
 
 /*
