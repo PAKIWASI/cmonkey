@@ -6,8 +6,8 @@
 
 
 typedef struct {
-    Arena  arena;  // owns all string data
-    genVec words;  // vec of u32 byte-offsets into arena
+    Arena*  arena;  // owns all string data
+    genVec* words;  // vec of u32 byte-offsets into arena
 } WordBank;
 
 

@@ -558,7 +558,7 @@ align to 4 bytes
 */
 // Align a value to alignment boundary
 #define ALIGN_UP(val, align) \
-    (((val) + ((align) - 1)) & ~((align) - 1))
+    ((align) == 0 ? (val) : (((val) + ((align) - 1)) & ~((align) - 1)))
 
 // align value to ARENA_DEFAULT_ALIGNMENT
 #define ALIGN_UP_DEFAULT(val) \
