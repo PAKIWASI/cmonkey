@@ -19,6 +19,7 @@
 
 // file helpers
 
+// reads entire json file into a buffer (null terminated)
 static char* read_file(const char* filename, u32* out_size)
 {
     FILE* f = fopen(filename, "rb");
@@ -43,6 +44,36 @@ static char* read_file(const char* filename, u32* out_size)
     return buf;
 }
 
+static jsmntok_t* jsmn_parse_json(char* json_buf, u32 json_len, jsmn_parser* parser, int* num_tokens)
+{
+    // Two-pass jsmn parse
+    // Pass 1: tokens=NULL → jsmn counts tokens, returns how many
+    jsmn_parser p;
+    jsmn_init(&p);
+
+    int n_tokens = jsmn_parse(&p, json_buf, json_len, NULL, 0);
+    CHECK_FATAL(n_tokens <= 0, "jsmn count pass failed: %d", n_tokens);
+
+    // BUG:
+    printf("\nnum_tokens: %d\n", n_tokens);
+
+    // Pass 2: allocate token array, parse for real
+    jsmntok_t* toks = malloc((size_t)n_tokens * sizeof(jsmntok_t));
+    CHECK_FATAL(!toks, "OOM tokens");
+
+    // have to re-init
+    jsmn_init(&p);
+    int r = jsmn_parse(&p, json_buf, json_len, toks, (u32)n_tokens);
+    CHECK_FATAL(r < 0, "jsmn fill pass failed: %d", r);
+
+    // this has to be true, otherwise, invalid json
+    CHECK_FATAL(toks[0].type != JSMN_OBJECT, "JSON root is not an object");
+
+    *parser = p;
+    *num_tokens = n_tokens;
+    return toks;
+}
+
 
 WordBank* wordbank_create(const char* filename)
 {
@@ -51,54 +82,22 @@ WordBank* wordbank_create(const char* filename)
     char* json_buf = read_file(filename, &json_len);
     CHECK_WARN_RET(!json_buf, NULL, "failed to read '%s'", filename);
 
-    // Two-pass jsmn parse
-    // Pass 1: tokens=NULL → jsmn counts tokens, returns how many
+
+    int num_tokens;
     jsmn_parser parser;
-    jsmn_init(&parser);
-    int num_tokens = jsmn_parse(&parser, json_buf, json_len, NULL, 0);
-    if (num_tokens <= 0) {
-        WARN("jsmn count pass failed: %d", num_tokens);
-        free(json_buf);
-        return NULL;
-    }
+    jsmntok_t* toks = jsmn_parse_json(json_buf, json_len, &parser, &num_tokens);
 
-    // BUG:
-    printf("\nnum_tokens: %d\n", num_tokens);
-
-
-    // Pass 2: allocate token array, parse for real
-    jsmntok_t* toks = malloc((size_t)num_tokens * sizeof(jsmntok_t));
-    if (!toks) { 
-        WARN("OOM tokens");
-        free(json_buf);
-        return NULL;
-    }
-
-    jsmn_init(&parser);
-    int r = jsmn_parse(&parser, json_buf, json_len, toks, (u32)num_tokens);
-    if (r < 0) {
-        WARN("jsmn fill pass failed: %d", r);
-        free(toks); free(json_buf);
-        return NULL;
-    }
-
-    // this has to be true, otherwise, invalid json
-    if (toks[0].type != JSMN_OBJECT) {
-        WARN("JSON root is not an object");
-        free(toks); free(json_buf);
-        return NULL;
-    }
 
     /*
     Find "words" array token
-    
+
       Token layout (JSMN_PARENT_LINKS, example {"words":["a","b"]}):
         [0] OBJECT  size=1  parent=-1
         [1] STRING "words"  size=1  parent=0   <- key
         [2] ARRAY           size=2  parent=1   <- value  (this is words_array_idx)
         [3] STRING "a"      size=0  parent=2
         [4] STRING "b"      size=0  parent=2
-    
+
       Every JSON key is a STRING whose parent is the enclosing OBJECT index.
       Its value token is at key_index + 1.
     */
