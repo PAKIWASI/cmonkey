@@ -1,6 +1,8 @@
 #include "ui.h"
 #include "json_wordbank_loader.h"
+
 #include <ncurses.h>
+#include <locale.h>
 #include <string.h>
 
 
@@ -21,16 +23,46 @@
 // text window fills what's in between
 #define TEXTBOX_H (LINES / 2)
 #define TEXTBOX_W (COLS / 2)
-#define TEXTBOX_Y (((LINES - HEADER_H) / 2) - (TEXTBOX_H / 2))
-#define TEXTBOX_X (TEXTBOX_W - (TEXTBOX_W / 2))
+#define TEXTBOX_X ((COLS - TEXTBOX_W) / 2)
+#define TEXTBOX_Y ((LINES - TEXTBOX_H) / 2)
+
+// row/col spacing
+#define WORD_SPACING 2
+#define LINE_SPACING 2
 
 
 // window creation
 
+static void draw_rounded_box(WINDOW* win)
+{
+    int h = getmaxy(win);
+    int w = getmaxx(win);
+
+    // Corners — use mvwaddstr because these are
+    // multi-byte UTF-8 sequences (4 bytes each), not single chtype values
+    mvwaddstr(win, 0,     0,     "╭");
+    mvwaddstr(win, 0,     w - 1, "╮");
+    mvwaddstr(win, h - 1, 0,     "╰");
+    mvwaddstr(win, h - 1, w - 1, "╯");
+
+    for (int x = 1; x < w - 1; x++) {
+        mvwaddstr(win, 0,     x, "─");
+        mvwaddstr(win, h - 1, x, "─");
+    }
+
+    for (int y = 1; y < h - 1; y++) {
+        mvwaddstr(win, y, 0,     "│");
+        mvwaddstr(win, y, w - 1, "│");
+    }
+}
+
+
 static WINDOW* make_win(int h, int w, int y, int x)
 {
     WINDOW* win = newwin(h, w, y, x);
-    box(win, 0, 0);
+    // box(win, 0, 0);
+    // wborder(win, 0, 0, 0, 0, 0, 0, 0, 0);
+    draw_rounded_box(win);
     return win;
 }
 
@@ -50,6 +82,7 @@ static void rebuild_windows(UI* ui)
 
 void ui_init(UI* ui)
 {
+    setlocale(LC_ALL, "");
     initscr();
     noecho();
     cbreak();
@@ -142,7 +175,8 @@ void ui_render(UI* ui, const Game* g)
 
         // Wrap to next row if needed (+1 for the space separator)
         if (col + wlen + 1 > inner_w + 2 && col != 2) {
-            row++;
+            // row++;
+            row += LINE_SPACING;
             col = 2;
             if (row >= getmaxy(ui->text) - 1) { break; } // out of window space
         }
@@ -184,7 +218,7 @@ void ui_render(UI* ui, const Game* g)
             wattroff(ui->text, A_DIM);
         }
 
-        col += wlen + 1; // +1 for space
+        col += wlen + WORD_SPACING; // +2 for space
     }
 
     // status bar

@@ -1,8 +1,8 @@
 #include "game.h"
+#include "gen_vector_single.h"
 #include "json_wordbank_loader.h"
 #include "random_single.h"
 #include <string.h>
-#include <time.h>
 
 
 // internal helpers
@@ -36,7 +36,7 @@ void game_new_round(Game* g)
         genVec_destroy(g->indices);
     }
     g->indices    = wordbank_random_words(g->bank, GAME_WORD_COUNT);
-    g->word_count = (u32)g->indices->size;
+    g->word_count = (u32)genVec_size(g->indices);
 
     g->word_pos          = 0;
     g->char_pos          = 0;
