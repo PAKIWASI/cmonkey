@@ -199,6 +199,9 @@ cleanup:
 void wordbank_destroy(WordBank* wb)
 {
     if (!wb) { return; }
+
+    LOG("arena used: %lu", arena_used(wb->arena));
+
     arena_release(wb->arena);
     genVec_destroy(wb->words);
     free(wb);

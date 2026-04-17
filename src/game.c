@@ -32,7 +32,6 @@ void game_destroy(Game* g)
 
 void game_new_round(Game* g)
 {
-    // TODO: kinda inafficient
     if (g->indices) {
         genVec_destroy(g->indices);
     }

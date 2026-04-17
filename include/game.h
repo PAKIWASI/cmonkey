@@ -6,6 +6,7 @@
 
 // constants
 
+// TODO: words should not run out
 #define GAME_WORD_COUNT   30     // words per round
 #define GAME_DURATION_S   15.0f  // seconds per round
 

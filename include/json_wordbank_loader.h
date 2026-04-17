@@ -28,4 +28,8 @@ const char* wordbank_random_word(WordBank* wb);
 // Caller must genVec_destroy() the returned vec.
 genVec*     wordbank_random_words(WordBank* wb, u32 count);
 
+static inline u64 wordbank_size(WordBank* wb) {
+    return genVec_size(wb->words);
+}
+
 #endif // JSON_WORDBANK_LOADER_H
