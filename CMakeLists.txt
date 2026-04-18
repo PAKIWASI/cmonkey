@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 set(CMAKE_C_COMPILER clang)
+
 project(cmonkey LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
@@ -24,9 +25,7 @@ set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
 find_package(Curses REQUIRED)
 
 set (SRC_FILES
-    src/game.c
-    src/ui.c
-    src/json_wordbank_loader.c
+    src/wordbank.c
     src/wc_imp.c
 )
 

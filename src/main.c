@@ -17,21 +17,6 @@
 
 int main(void)
 {
-    UI   ui;
-    Game game;
-
-    ui_init(&ui);
-    game_init(&game, CURR_FILE);
-
-    // clear();
-    bool running = true;
-    while (running) {
-
-    }
-
-
-    game_destroy(&game);
-    ui_destroy(&ui);
 
     return 0;
 }

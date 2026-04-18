@@ -1,4 +1,4 @@
-#include "json_wordbank_loader.h"
+#include "wordbank.h"
 #include "arena_single.h"
 
 #define JSMN_PARENT_LINKS

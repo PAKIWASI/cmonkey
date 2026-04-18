@@ -1,5 +1,5 @@
-#ifndef JSON_WORDBANK_LOADER_H
-#define JSON_WORDBANK_LOADER_H
+#ifndef CMONKEY_WORDBANK_H
+#define CMONKEY_WORDBANK_H
 
 #include "gen_vector_single.h"
 #include "arena_single.h"
@@ -9,6 +9,9 @@ typedef struct {
     Arena*  arena;  // owns all string data
     genVec* words;  // vec of u32 byte-offsets into arena
 } WordBank;
+
+// TODO: should we limit to loading a maximum of 100K words per launch
+// we have english 450K and the launch is not smooth
 
 
 // Load entire JSON word list into memory.
@@ -32,4 +35,4 @@ static inline u64 wordbank_size(WordBank* wb) {
     return genVec_size(wb->words);
 }
 
-#endif // JSON_WORDBANK_LOADER_H
+#endif // CMONKEY_WORDBANK_H
