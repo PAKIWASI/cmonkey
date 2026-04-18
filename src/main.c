@@ -27,54 +27,12 @@ int main(void)
     bool running = true;
     while (running) {
 
-        // render
-        if (game.state == GS_FINISHED) {
-            ui_render_results(&ui, &game);
-        } else {
-            ui_render(&ui, &game);
-        }
-
-        // tick (update elapsed time)
-        game_tick(&game);
-
-        // input
-        int ch = getch(); // returns ERR after timeout(100) ms if no key
-
-        if (ch == ERR) { continue; } // just a timer tick, nothing typed
-
-
-        // Global keys
-        if (ch == 'q' || ch == 3 /* Ctrl-C */) {
-            running = false;
-            break;
-        }
-
-        if (ch == KEY_RESIZE) {
-            ui_resize(&ui);
-            continue;
-        }
-
-        if (game.state == GS_FINISHED) {
-            if (ch == 'r') {
-                game_new_round(&game);
-            }
-            continue;
-        }
-
-        // Forward to game logic
-        game_input(&game, ch);
     }
 
-    u64 used = game.bank->arena->idx;
-    u64 cap = game.bank->arena->size;
-    u64 words = game.bank->words->size;
 
     game_destroy(&game);
     ui_destroy(&ui);
 
-    LOG("arena used: %lu", used);
-    LOG("arena cap: %lu", cap);
-    LOG("genVec size: %lu", words);
     return 0;
 }
 

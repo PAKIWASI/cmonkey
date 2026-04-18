@@ -51,54 +51,7 @@ void game_new_round(Game* g)
 // Returns true if the round just finished.
 bool game_input(Game* g, int ch)
 {
-    if (g->state == GS_FINISHED) { return false; }
 
-    // Start timer on first real keypress
-    if (g->state == GS_WAITING) {
-        timespec_get(&g->start_time, TIME_UTC);
-        g->state = GS_TYPING;
-    }
-
-    if (g->word_pos >= g->word_count) {
-        g->state = GS_FINISHED;
-        return true;
-    }
-
-    const char* word    = game_current_word(g);
-    u32         wlen    = (u32)strlen(word);
-
-    g->total_chars_typed++;
-
-    if (ch == ' ') {
-        // Space advances to next word (counts current word as done)
-        if (g->char_pos == wlen) {
-            g->results[g->word_pos] = WR_CORRECT;
-            g->correct_chars += wlen;
-        } else {
-            g->results[g->word_pos] = WR_WRONG;
-        }
-        g->word_pos++;
-        g->char_pos = 0;
-
-        if (g->word_pos >= g->word_count) {
-            g->state = GS_FINISHED;
-            return true;
-        }
-        return false;
-    }
-
-    // Regular character — compare against expected
-    if (g->char_pos < wlen) {
-        if ((char)ch == word[g->char_pos]) {
-            g->char_pos++;
-        } else {
-
-        }
-        // wrong char: don't advance (monkeytype-style: must retype correctly)
-        // if you want lenient mode, just always increment char_pos here
-    }
-
-    return false;
 }
 
 

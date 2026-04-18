@@ -62,7 +62,8 @@ static WINDOW* make_win(int h, int w, int y, int x)
     WINDOW* win = newwin(h, w, y, x);
     // box(win, 0, 0);
     // wborder(win, 0, 0, 0, 0, 0, 0, 0, 0);
-    draw_rounded_box(win);
+    // draw_rounded_box(win);
+    wborder(win, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
     return win;
 }
 
@@ -82,7 +83,7 @@ static void rebuild_windows(UI* ui)
 
 void ui_init(UI* ui)
 {
-    setlocale(LC_ALL, "");
+    // setlocale(LC_ALL, "");
     initscr();
     noecho();
     cbreak();
@@ -148,90 +149,7 @@ static void draw_titled_box(WINDOW* win, const char* title)
 // We wrap at COLS-4 (leaving 2 chars border each side).
 void ui_render(UI* ui, const Game* g)
 {
-    int inner_w = getmaxx(ui->text) - 4;  // usable columns inside border+padding
 
-    // header
-    draw_titled_box(ui->header, "cmonkey");
-    wattron(ui->header, COLOR_PAIR(CP_HEADER) | A_BOLD);
-
-    if (g->state == GS_WAITING) {
-        mvwprintw(ui->header, 1, 2, "Time: %.0f   Start typing!", GAME_DURATION_S);
-    } else {
-        mvwprintw(ui->header, 1, 2, "Time: %4.1f", game_time_left(g));
-    }
-    wattroff(ui->header, COLOR_PAIR(CP_HEADER) | A_BOLD);
-
-    // text window
-    werase(ui->text);
-    box(ui->text, 0, 0);
-
-    int row = 1, col = 2;  // start inside border
-
-    for (u32 wi = 0; wi < g->word_count; wi++) 
-    {
-        u32         idx  = *(u32*)genVec_get_ptr(g->indices, wi);
-        const char* word = wordbank_word_at(g->bank, idx);
-        int         wlen = (int)strlen(word);
-
-        // Wrap to next row if needed (+1 for the space separator)
-        if (col + wlen + 1 > inner_w + 2 && col != 2) {
-            // row++;
-            row += LINE_SPACING;
-            col = 2;
-            if (row >= getmaxy(ui->text) - 1) { break; } // out of window space
-        }
-
-        if (wi < g->word_pos) {
-            // Already typed
-            int attr = (g->results[wi] == WR_CORRECT)
-                       ? (COLOR_PAIR(CP_CORRECT) | A_BOLD)
-                       : (COLOR_PAIR(CP_WRONG)   | A_BOLD);
-            wattron(ui->text, attr);
-            mvwprintw(ui->text, row, col, "%s", word);
-            wattroff(ui->text, attr);
-
-        } else if (wi == g->word_pos) {
-            // Current word: colour each char individually
-            for (int ci = 0; ci < wlen; ci++) {
-                if (ci < (int)g->char_pos) {
-                    // typed correctly so far
-                    wattron(ui->text, COLOR_PAIR(CP_CORRECT));
-                    mvwaddch(ui->text, row, col + ci, (chtype)word[ci]);
-                    wattroff(ui->text, COLOR_PAIR(CP_CORRECT));
-                } else if (ci == (int)g->char_pos) {
-                    // cursor position
-                    wattron(ui->text, A_UNDERLINE | A_BOLD);
-                    mvwaddch(ui->text, row, col + ci, (chtype)word[ci]);
-                    wattroff(ui->text, A_UNDERLINE | A_BOLD);
-                } else {
-                    // not yet typed
-                    wattron(ui->text, A_DIM);
-                    mvwaddch(ui->text, row, col + ci, (chtype)word[ci]);
-                    wattroff(ui->text, A_DIM);
-                }
-            }
-
-        } else {
-            // Future words
-            wattron(ui->text, A_DIM);
-            mvwprintw(ui->text, row, col, "%s", word);
-            wattroff(ui->text, A_DIM);
-        }
-
-        col += wlen + WORD_SPACING; // +2 for space
-    }
-
-    // status bar
-    draw_titled_box(ui->status, "");
-    mvwprintw(ui->status, 1, 2,
-              "WPM: %5.1f  |  Acc: %5.1f%%  |  [Space] next word  [Ctrl-C] quit",
-              game_wpm(g), game_accuracy(g));
-
-    // flush
-    wnoutrefresh(ui->header);
-    wnoutrefresh(ui->text);
-    wnoutrefresh(ui->status);
-    doupdate();
 }
 
 
@@ -256,6 +174,7 @@ void ui_render_results(UI* ui, const Game* g)
     mvwprintw(ui->status, 1, 2,
               "[r] new round   [q] quit");
 
+    // flush
     wnoutrefresh(ui->header);
     wnoutrefresh(ui->text);
     wnoutrefresh(ui->status);

@@ -43,12 +43,18 @@ typedef struct {
     struct timespec start_time;
     float           elapsed_s;
 
-    // TODO: words/accuracy?
     // stats
     u32   correct_chars;
     u32   total_chars_typed;
 } Game;
 
+/* TODO: 
+    1. speed/accuracy should be based on words, not chars
+    2. we should never run out of words
+    3. we should be able to go back (backspace)
+    4. if you mistype a char, we should indicate that, along with 
+        word being shown as "wrong"
+*/
 
 // api
 
