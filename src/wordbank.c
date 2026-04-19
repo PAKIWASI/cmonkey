@@ -1,4 +1,6 @@
 #include "wordbank.h"
+#include "arena_single.h"
+#include "gen_vector_single.h"
 #include "random_single.h"
 
 #define JSMN_PARENT_LINKS
@@ -8,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_LOAD_WORDS 100000   // 100K
+#define MAX_LOAD_WORDS 100000 // 100K
 
 
 // file helpers
@@ -118,11 +120,7 @@ static int find_words_arr(char* json_buf, jsmntok_t* toks, int num_tokens)
         }
     }
 
-    CHECK_WARN_RET(
-        words_arr < 0 ||
-        toks[words_arr].type != JSMN_ARRAY, -1,
-        "no 'words' array in JSON"
-    );
+    CHECK_WARN_RET(words_arr < 0 || toks[words_arr].type != JSMN_ARRAY, -1, "no 'words' array in JSON");
 
     return words_arr;
 }
@@ -136,8 +134,11 @@ WordBank* wordbank_create(const char* filename)
 
     int         num_tokens = 0;
     jsmn_parser parser;
-    jsmntok_t*  toks = jsmn_parse_json(json_buf, json_len, &parser, &num_tokens);
+    // get token array, tokens stored inline
+    jsmntok_t* toks = jsmn_parse_json(json_buf, json_len, &parser, &num_tokens);
     CHECK_WARN_RET(!toks, NULL, "jsmn parse failed");
+
+    WordBank* wb = NULL;
 
     // returns the offset to value of "words" key: the words array itself
     int words_arr = find_words_arr(json_buf, toks, num_tokens);
@@ -152,84 +153,111 @@ WordBank* wordbank_create(const char* filename)
         goto cleanup;
     }
 
+    // Seed RNG once. If we have >= 2*MAX_LOAD_WORDS words, pick a random
+    // contiguous block of MAX_LOAD_WORDS starting at a random word index.
+    // For smaller banks, load everything as-is.
 
-    // TODO: 
-    // TOO MANY WORDS
-    // randomly load a block of 100k words
-    // randomly choose an offset and select next 100K (wrapped)
-    // if there are 200K words, we will choose 100K
-    // for less than 200K, it's fine as is
     pcg32_rand_seed_time();
-    int og_num_words = (int)num_words;
+
+    u32 load_count   = num_words;
+    u32 start_offset = 0;
     if (num_words >= MAX_LOAD_WORDS * 2) {
-        // words_arr + 1 points to the first word
-        words_arr += (int)pcg32_rand_bounded(num_words);
-        num_words = MAX_LOAD_WORDS;
+        start_offset = pcg32_rand_bounded(num_words);
+        load_count   = MAX_LOAD_WORDS;
     }
 
-
-    // Allocate WordBank and arena
-    WordBank* wb = malloc(sizeof(WordBank));
+    wb = malloc(sizeof(WordBank));
     if (!wb) {
         WARN("OOM WordBank");
         goto cleanup;
     }
 
-    // Calculate exact arena size: sum(word_len) + num_words NUL bytes
+    // Size pass: walk tokens starting at start_offset-th matching word, wrapping around
+    // calculate how much bytes are needed
     u64 bytes_needed = 0;
+    u32 skipped      = 0;
     u32 found        = 0;
-    for (int i = words_arr + 1; i < num_tokens && found < num_words; i = (i + 1) % og_num_words) {
-        if (toks[i].parent == words_arr && toks[i].type == JSMN_STRING) {
-            bytes_needed += (u64)(toks[i].end - toks[i].start) + 1;
-            found++;
+    int i            = words_arr + 1;
+    while (found < load_count) {
+        if (i >= num_tokens) {
+            i = words_arr + 1; // wrap
         }
+        if (toks[i].parent == words_arr && toks[i].type == JSMN_STRING) {
+            if (skipped < start_offset) {
+                skipped++;
+            } else {
+                bytes_needed += (u64)(toks[i].end - toks[i].start) + 1;
+                found++;
+            }
+        }
+        i++;
     }
 
     wb->arena = arena_create(bytes_needed);
     if (!wb->arena) {
         WARN("arena_create failed");
-        free(wb);
         goto cleanup;
     }
+    
+    // size is equal to num of loaded words
+    wb->words = genVec_init(load_count, sizeof(u32), NULL);
 
-    wb->words = genVec_init(num_words, sizeof(u32), NULL);
-
-    // Copy words into arena, store byte offset per word
-    found = 0;
-    for (int i = words_arr + 1; i < num_tokens && found < num_words; i++)
-    {
-        jsmntok_t* t = &toks[i];
-        if (t->parent != words_arr || t->type != JSMN_STRING) {
-            continue;
+    // Copy pass: identical walk
+    skipped = 0;
+    found   = 0;
+    i       = words_arr + 1;
+    while (found < load_count) {
+        if (i >= num_tokens) {
+            i = words_arr + 1; // wrap
         }
+        jsmntok_t* t = &toks[i];
+        if (t->parent == words_arr && t->type == JSMN_STRING) {
+            if (skipped < start_offset) {
+                skipped++;
+            } else {
+                int wlen   = t->end - t->start;
+                u32 offset = (u32)arena_used(wb->arena);
 
-        int wlen   = t->end - t->start;
-        u32 offset = (u32)arena_used(wb->arena);
+                char* dest = (char*)arena_alloc(wb->arena, (u64)wlen + 1);
+                CHECK_FATAL(!dest, "arena exhausted");
 
-        // this aligns up by default but we added ARENA_DEFAULT_ALIGNMENT 0 to wc_imp
-        char* dest = (char*)arena_alloc(wb->arena, (u64)wlen + 1);
-        CHECK_FATAL(!dest, "arena exhausted");
+                memcpy(dest, json_buf + t->start, (size_t)wlen);
+                dest[wlen] = '\0';
 
-        memcpy(dest, json_buf + t->start, (size_t)wlen);
-        dest[wlen] = '\0';
-
-        genVec_push(wb->words, (u8*)&offset);
-        found++;
+                genVec_push(wb->words, (u8*)&offset);
+                found++;
+            }
+        }
+        i++;
     }
 
-    // Free temporaries — all string data is now in the arena
+    // Pre-allocate scratch array for wordbank_random_words (avoids per-call malloc)
+    wb->scratch = malloc(load_count * sizeof(u32));
+    if (!wb->scratch) {
+        WARN("OOM scratch");
+        goto cleanup;
+    }
+    for (u32 k = 0; k < load_count; k++) {
+        wb->scratch[k] = k;
+    }
+
+
     free(toks);
     free(json_buf);
 
-    LOG("wordbank: loaded %u words (%lu bytes)", found, arena_used(wb->arena));
+    LOG("loaded %u words (%lu bytes)", found, arena_used(wb->arena));
     return wb;
 
 cleanup:
     free(json_buf);
     free(toks);
+    if (wb) {
+        if (wb->arena) { arena_release(wb->arena); }
+        if (wb->words) { genVec_destroy(wb->words); }
+        free(wb);
+    }
     return NULL;
 }
-
 
 void wordbank_destroy(WordBank* wb)
 {
@@ -241,50 +269,32 @@ void wordbank_destroy(WordBank* wb)
 
     arena_release(wb->arena);
     genVec_destroy(wb->words);
+    free(wb->scratch);
     free(wb);
 }
 
-const char* wordbank_random_word(WordBank* wb)
-{
-    CHECK_WARN_RET(!wb || wb->words->size == 0, NULL, "empty wordbank");
-    u32 idx = pcg32_rand_bounded((u32)wb->words->size);
-    return wordbank_word_at(wb, idx);
-}
 
-// TODO: if we already know how many words we load each time
-// then we can just use a static array to store the indices
-
-// Returns a genVec* of u32 word-indices (not copies).
-// Partial Fisher-Yates: O(N) time, no allocations beyond the scratch array.
-genVec* wordbank_random_words(WordBank* wb, u32 count)
+void wordbank_random_words(WordBank* wb, u32* buff, u32 buff_size)
 {
-    CHECK_WARN_RET(!wb, NULL, "null wordbank");
+    CHECK_WARN_RET(!wb, , "null wordbank");
 
     u32 total = (u32)wb->words->size;
-    if (count > total) {
-        WARN("requested %u words, bank has %u — clamping", count, total);
-        count = total;
-    }
 
-    u32* scratch = malloc(total * sizeof(u32));
-    CHECK_FATAL(!scratch, "OOM in wordbank_random_words");
+    // Reset scratch to identity permutation before each shuffle
     for (u32 i = 0; i < total; i++) {
-        scratch[i] = i;
+        wb->scratch[i] = i;
     }
 
-    for (u32 i = 0; i < count; i++) {
+    for (u32 i = 0; i < buff_size; i++) {
         u32 j      = i + pcg32_rand_bounded(total - i);
-        u32 tmp    = scratch[i];
-        scratch[i] = scratch[j];
-        scratch[j] = tmp;
+        u32 tmp    = wb->scratch[i];
+        wb->scratch[i] = wb->scratch[j];
+        wb->scratch[j] = tmp;
     }
 
-    genVec* result = genVec_init(count, sizeof(u32), NULL);
-    for (u32 i = 0; i < count; i++) {
-        genVec_push(result, (u8*)&scratch[i]);
+    for (u32 i = 0; i < buff_size; i++) {
+        buff[i] = wb->scratch[i];
     }
-
-    free(scratch);
-    return result;
 }
+
 

@@ -6,13 +6,12 @@
 
 
 typedef struct {
-    Arena*  arena;  // owns all string data
-    genVec* words;  // vec of u32 byte-offsets into arena
+    Arena*  arena;      // owns all string data
+    genVec* words;      // vec of u32 byte-offsets into arena
+    u32*    scratch;    // pre-allocated index array for random selection (size == words->size)
 } WordBank;
 
 // TODO: 
-// 1. should we limit to loading a maximum of 100K words per launch
-//  we have english 450K and the launch is not smooth
 // 2. ARABIC is loading correctly with setlocate(), idk about cursor movement
 
 // Load entire JSON word list into memory.
@@ -28,13 +27,9 @@ static inline const char* wordbank_word_at(WordBank* wb, u32 i)
     return (const char*)(wb->arena->base + offset);
 }
 
-// Get a single random word (pointer into arena).
-const char* wordbank_random_word(WordBank* wb);
+// Partial Fisher-Yates: O(N) time
+void wordbank_random_words(WordBank* wb, u32* buff, u32 buff_size);
 
-// Get a genVec* of u32 word-indices, randomly selected without replacement.
-// Iterate with: *(u32*)genVec_get_ptr(v, i)  then pass to wordbank_word_at().
-// Caller must genVec_destroy() the returned vec.
-genVec* wordbank_random_words(WordBank* wb, u32 count);
 
 static inline u64 wordbank_size(WordBank* wb) {
     return genVec_size(wb->words);
