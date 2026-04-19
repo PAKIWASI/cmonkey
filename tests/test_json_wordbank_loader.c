@@ -16,11 +16,12 @@
 #define FOLDER_PATH "wordbanks/"
 #define CURR_FILE (FOLDER_PATH ENG450K)
 
+#define NUM_RAND_WORDS 1000
 
 
 static int test_wb_create(void)
 {
-    WordBank* wb = wordbank_create(CURR_FILE);
+    WordBank* wb = wordbank_create(CURR_FILE, NUM_RAND_WORDS);
     WC_ASSERT_NOT_NULL(wb);
     if (!wb) {
         return -1;
@@ -34,16 +35,16 @@ static int test_wb_create(void)
 
 static int test_get_random_words(void)
 {
-    WordBank* wb = wordbank_create(CURR_FILE);
+    WordBank* wb = wordbank_create(CURR_FILE, NUM_RAND_WORDS);
     WC_ASSERT(wb);
     if (!wb) {
         return -1;
     }
 
-    u32 buff[1000] = {0};
+    u32 buff[NUM_RAND_WORDS] = {0};
 
     for (u32 i = 0; i < 10000; i++) {
-        wordbank_random_words(wb, buff, 1000);
+        wordbank_random_words(wb, buff, NUM_RAND_WORDS);
         // printf("%s\t", wordbank_word_at(wb, buff[0]));
     }
 

@@ -125,7 +125,7 @@ static int find_words_arr(char* json_buf, jsmntok_t* toks, int num_tokens)
     return words_arr;
 }
 
-WordBank* wordbank_create(const char* filename)
+WordBank* wordbank_create(const char* filename, u32 num_random_words)
 {
     // Read file into a temporary heap buffer
     u32   json_len = 0;
@@ -240,6 +240,12 @@ WordBank* wordbank_create(const char* filename)
     for (u32 k = 0; k < load_count; k++) {
         wb->scratch[k] = k;
     }
+                            // DEBUG: NUM_RAND_WORDS
+    wb->swapped_j = malloc(num_random_words * sizeof(u32));
+    if (!wb->swapped_j) {
+        WARN("OOM scratch");
+        goto cleanup;
+    }
 
 
     free(toks);
@@ -254,6 +260,7 @@ cleanup:
     if (wb) {
         if (wb->arena) { arena_release(wb->arena); }
         if (wb->words) { genVec_destroy(wb->words); }
+        if (wb->scratch) { free(wb->scratch); }
         free(wb);
     }
     return NULL;
@@ -270,6 +277,7 @@ void wordbank_destroy(WordBank* wb)
     arena_release(wb->arena);
     genVec_destroy(wb->words);
     free(wb->scratch);
+    free(wb->swapped_j);
     free(wb);
 }
 
@@ -281,20 +289,30 @@ void wordbank_random_words(WordBank* wb, u32* buff, u32 buff_size)
     u32 total = (u32)wb->words->size;
 
     // Reset scratch to identity permutation before each shuffle
-    for (u32 i = 0; i < total; i++) {
-        wb->scratch[i] = i;
-    }
+    // for (u32 i = 0; i < total; i++) {
+    //     wb->scratch[i] = i;
+    // }
 
     for (u32 i = 0; i < buff_size; i++) {
-        u32 j      = i + pcg32_rand_bounded(total - i);
+        u32 j = i + pcg32_rand_bounded(total - i);
+        wb->swapped_j[i] = j;
+
+        u32 tmp         = wb->scratch[i];
+        wb->scratch[i]  = wb->scratch[j];
+        wb->scratch[j]  = tmp;
+
+        buff[i] = wb->scratch[i];
+    }
+
+    // Undo swaps in reverse — restores scratch to identity without full reset
+    for (u32 i = buff_size; i-- > 0;) {
+        u32 j      = wb->swapped_j[i];
+
         u32 tmp    = wb->scratch[i];
         wb->scratch[i] = wb->scratch[j];
         wb->scratch[j] = tmp;
     }
 
-    for (u32 i = 0; i < buff_size; i++) {
-        buff[i] = wb->scratch[i];
-    }
 }
 
 

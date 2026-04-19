@@ -9,13 +9,14 @@ typedef struct {
     Arena*  arena;      // owns all string data
     genVec* words;      // vec of u32 byte-offsets into arena
     u32*    scratch;    // pre-allocated index array for random selection (size == words->size)
+    u32*    swapped_j;  // tracks what indices were swapped, to swap them back afterwards
 } WordBank;
 
 // TODO: 
 // 2. ARABIC is loading correctly with setlocate(), idk about cursor movement
 
 // Load entire JSON word list into memory.
-WordBank* wordbank_create(const char* filename);
+WordBank* wordbank_create(const char* filename, u32 num_random_words);
 
 // Destroy and free all memory.
 void wordbank_destroy(WordBank* wb);
@@ -27,9 +28,8 @@ static inline const char* wordbank_word_at(WordBank* wb, u32 i)
     return (const char*)(wb->arena->base + offset);
 }
 
-// Partial Fisher-Yates: O(N) time
+// Partial Fisher-Yates: O(N) time, my modified verion: O(buff_size)
 void wordbank_random_words(WordBank* wb, u32* buff, u32 buff_size);
-
 
 static inline u64 wordbank_size(WordBank* wb) {
     return genVec_size(wb->words);
