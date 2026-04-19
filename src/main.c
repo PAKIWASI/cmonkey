@@ -1,5 +1,3 @@
-#include "game.h"
-#include "ui.h"
 
 
 #define FILE_PATH_ENG "/home/wasi/Documents/projects/c/cmonkey/data/english.json"

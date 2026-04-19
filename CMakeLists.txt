@@ -22,7 +22,7 @@ set(CMAKE_EXE_LINKER_FLAGS_DEBUG
 set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
 
 
-find_package(Curses REQUIRED)
+# find_package(Curses REQUIRED)
 
 set (SRC_FILES
     src/wordbank.c

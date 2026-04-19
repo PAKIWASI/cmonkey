@@ -1,16 +1,14 @@
 #include "wordbank.h"
-#include "arena_single.h"
+#include "random_single.h"
 
 #define JSMN_PARENT_LINKS
 #include "jsmn.h"
-
-#include "gen_vector_single.h"
-#include "random_single.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#define MAX_LOAD_WORDS 100000   // 100K
 
 
 // file helpers
@@ -19,21 +17,36 @@
 static char* read_file(const char* filename, u32* out_size)
 {
     FILE* f = fopen(filename, "rb");
-    if (!f) { WARN("cannot open '%s'", filename); return NULL; }
+    if (!f) {
+        WARN("cannot open '%s'", filename);
+        return NULL;
+    }
 
     fseek(f, 0, SEEK_END);
     long sz = ftell(f);
     fseek(f, 0, SEEK_SET);
 
-    if (sz <= 0) { WARN("file '%s' empty", filename); fclose(f); return NULL; }
+    if (sz <= 0) {
+        WARN("file '%s' empty", filename);
+        fclose(f);
+        return NULL;
+    }
 
     char* buf = malloc((size_t)sz + 1);
-    if (!buf)  { WARN("OOM reading '%s'", filename); fclose(f); return NULL; }
+    if (!buf) {
+        WARN("OOM reading '%s'", filename);
+        fclose(f);
+        return NULL;
+    }
 
     size_t n = fread(buf, 1, (size_t)sz, f);
     fclose(f);
 
-    if ((long)n != sz) { WARN("short read on '%s'", filename); free(buf); return NULL; }
+    if ((long)n != sz) {
+        WARN("short read on '%s'", filename);
+        free(buf);
+        return NULL;
+    }
 
     buf[sz]   = '\0';
     *out_size = (u32)sz;
@@ -72,7 +85,7 @@ static jsmntok_t* jsmn_parse_json(char* json_buf, u32 json_len, jsmn_parser* par
         return NULL;
     }
 
-    *parser = p;
+    *parser     = p;
     *num_tokens = n_tokens;
     return toks;
 }
@@ -105,8 +118,11 @@ static int find_words_arr(char* json_buf, jsmntok_t* toks, int num_tokens)
         }
     }
 
-    CHECK_WARN_RET(words_arr < 0 || toks[words_arr].type != JSMN_ARRAY,
-                   -1, "no 'words' array in JSON");
+    CHECK_WARN_RET(
+        words_arr < 0 ||
+        toks[words_arr].type != JSMN_ARRAY, -1,
+        "no 'words' array in JSON"
+    );
 
     return words_arr;
 }
@@ -118,11 +134,12 @@ WordBank* wordbank_create(const char* filename)
     char* json_buf = read_file(filename, &json_len);
     CHECK_WARN_RET(!json_buf, NULL, "failed to read '%s'", filename);
 
-    int num_tokens = 0;
+    int         num_tokens = 0;
     jsmn_parser parser;
-    jsmntok_t* toks = jsmn_parse_json(json_buf, json_len, &parser, &num_tokens);
+    jsmntok_t*  toks = jsmn_parse_json(json_buf, json_len, &parser, &num_tokens);
     CHECK_WARN_RET(!toks, NULL, "jsmn parse failed");
 
+    // returns the offset to value of "words" key: the words array itself
     int words_arr = find_words_arr(json_buf, toks, num_tokens);
     if (words_arr == -1) {
         WARN("words array invalid");
@@ -135,6 +152,19 @@ WordBank* wordbank_create(const char* filename)
         goto cleanup;
     }
 
+
+    // TODO: 
+    // TOO MANY WORDS
+    // randomly load a block of 100k words
+    // randomly choose an offset and select next 100K (wrapped)
+    pcg32_rand_seed_time();
+    // if there are 200K words, we will choose 100K
+    // for less than 200K, it's fine as is
+    if (num_words >= MAX_LOAD_WORDS * 2) {
+        // words_arr + 1 points to the first word
+    }
+
+
     // Allocate WordBank and arena
     WordBank* wb = malloc(sizeof(WordBank));
     if (!wb) {
@@ -144,7 +174,7 @@ WordBank* wordbank_create(const char* filename)
 
     // Calculate exact arena size: sum(word_len) + num_words NUL bytes
     u64 bytes_needed = 0;
-    u32 found = 0;
+    u32 found        = 0;
     for (int i = words_arr + 1; i < num_tokens && found < num_words; i++) {
         if (toks[i].parent == words_arr && toks[i].type == JSMN_STRING) {
             bytes_needed += (u64)(toks[i].end - toks[i].start) + 1;
@@ -153,7 +183,7 @@ WordBank* wordbank_create(const char* filename)
     }
 
     wb->arena = arena_create(bytes_needed);
-    if (!wb->arena) { 
+    if (!wb->arena) {
         WARN("arena_create failed");
         free(wb);
         goto cleanup;
@@ -163,17 +193,19 @@ WordBank* wordbank_create(const char* filename)
 
     // Copy words into arena, store byte offset per word
     found = 0;
-    for (int i = words_arr + 1; i < num_tokens && found < num_words; i++) 
+    for (int i = words_arr + 1; i < num_tokens && found < num_words; i++)
     {
         jsmntok_t* t = &toks[i];
-        if (t->parent != words_arr || t->type != JSMN_STRING) { continue; }
+        if (t->parent != words_arr || t->type != JSMN_STRING) {
+            continue;
+        }
 
-        int  wlen   = t->end - t->start;
-        u32  offset = (u32)arena_used(wb->arena);
+        int wlen   = t->end - t->start;
+        u32 offset = (u32)arena_used(wb->arena);
 
         // this aligns up by default but we added ARENA_DEFAULT_ALIGNMENT 0 to wc_imp
         char* dest = (char*)arena_alloc(wb->arena, (u64)wlen + 1);
-        CHECK_FATAL(!dest, "arena exhausted — bytes_needed calculation bug");
+        CHECK_FATAL(!dest, "arena exhausted");
 
         memcpy(dest, json_buf + t->start, (size_t)wlen);
         dest[wlen] = '\0';
@@ -186,7 +218,7 @@ WordBank* wordbank_create(const char* filename)
     free(toks);
     free(json_buf);
 
-    // LOG("wordbank: loaded %u words (%lu bytes)", found, arena_used(wb->arena));
+    LOG("wordbank: loaded %u words (%lu bytes)", found, arena_used(wb->arena));
     return wb;
 
 cleanup:
@@ -198,7 +230,9 @@ cleanup:
 
 void wordbank_destroy(WordBank* wb)
 {
-    if (!wb) { return; }
+    if (!wb) {
+        return;
+    }
 
     LOG("arena used: %lu", arena_used(wb->arena));
 
@@ -207,14 +241,6 @@ void wordbank_destroy(WordBank* wb)
     free(wb);
 }
 
-
-const char* wordbank_word_at(WordBank* wb, u32 i)
-{
-    u32 offset = *(u32*)genVec_get_ptr(wb->words, i);
-    return (const char*)(wb->arena->base + offset);
-}
-
-
 const char* wordbank_random_word(WordBank* wb)
 {
     CHECK_WARN_RET(!wb || wb->words->size == 0, NULL, "empty wordbank");
@@ -222,6 +248,8 @@ const char* wordbank_random_word(WordBank* wb)
     return wordbank_word_at(wb, idx);
 }
 
+// TODO: if we already know how many words we load each time
+// then we can just use a static array to store the indices
 
 // Returns a genVec* of u32 word-indices (not copies).
 // Partial Fisher-Yates: O(N) time, no allocations beyond the scratch array.
@@ -237,13 +265,15 @@ genVec* wordbank_random_words(WordBank* wb, u32 count)
 
     u32* scratch = malloc(total * sizeof(u32));
     CHECK_FATAL(!scratch, "OOM in wordbank_random_words");
-    for (u32 i = 0; i < total; i++) { scratch[i] = i; }
+    for (u32 i = 0; i < total; i++) {
+        scratch[i] = i;
+    }
 
     for (u32 i = 0; i < count; i++) {
-        u32 j       = i + pcg32_rand_bounded(total - i);
-        u32 tmp     = scratch[i];
-        scratch[i]  = scratch[j];
-        scratch[j]  = tmp;
+        u32 j      = i + pcg32_rand_bounded(total - i);
+        u32 tmp    = scratch[i];
+        scratch[i] = scratch[j];
+        scratch[j] = tmp;
     }
 
     genVec* result = genVec_init(count, sizeof(u32), NULL);

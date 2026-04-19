@@ -42,20 +42,20 @@
 
 // TODO: warm paths ?
 
-#define WARN(fmt, ...)                                            \
-    do {                                                          \
-        printf(WC_COLOR_YELLOW "[WARN]"                              \
-                            " %s:%d:%s(): " fmt "\n" WC_COLOR_RESET, \
-               __FILE__, __LINE__, __func__, ##__VA_ARGS__);      \
+#define WARN(fmt, ...)                                                  \
+    do {                                                                \
+        printf(WC_COLOR_YELLOW "[WARN]"                                 \
+                               " %s:%d:%s(): " fmt "\n" WC_COLOR_RESET, \
+               __FILE__, __LINE__, __func__, ##__VA_ARGS__);            \
     } while (0)
 
-#define FATAL(fmt, ...)                                         \
-    do {                                                        \
-        fprintf(stderr,                                         \
-                WC_COLOR_RED "[FATAL]"                             \
-                          " %s:%d:%s(): " fmt "\n" WC_COLOR_RESET, \
-                __FILE__, __LINE__, __func__, ##__VA_ARGS__);   \
-        exit(EXIT_FAILURE);                                     \
+#define FATAL(fmt, ...)                                               \
+    do {                                                              \
+        fprintf(stderr,                                               \
+                WC_COLOR_RED "[FATAL]"                                \
+                             " %s:%d:%s(): " fmt "\n" WC_COLOR_RESET, \
+                __FILE__, __LINE__, __func__, ##__VA_ARGS__);         \
+        exit(EXIT_FAILURE);                                           \
     } while (0)
 
 #define CHECK_WARN(cond, fmt, ...)                           \
@@ -80,18 +80,18 @@
         }                                                     \
     } while (0)
 
-#define LOG(fmt, ...)                                       \
-    do {                                                    \
-        printf(WC_COLOR_CYAN "[LOG]"                           \
-                          " : %s(): " fmt "\n" WC_COLOR_RESET, \
-               __func__, ##__VA_ARGS__);                    \
+#define LOG(fmt, ...)                                             \
+    do {                                                          \
+        printf(WC_COLOR_CYAN "[LOG]"                              \
+                             " : %s(): " fmt "\n" WC_COLOR_RESET, \
+               __func__, ##__VA_ARGS__);                          \
     } while (0)
 
 
 // TYPES
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 typedef uint8_t  u8;
 typedef uint8_t  b8;
@@ -249,7 +249,7 @@ static inline void wc_print_cstr(const u8* elm)
 
 
 typedef enum {
-    WC_OK        = 0,
+    WC_OK = 0,
     WC_ERR_FULL,       // arena exhausted / container at capacity
     WC_ERR_EMPTY,      // pop or peek on empty container
     WC_ERR_INVALID_OP, // call to a function with preconditions not met
@@ -258,11 +258,16 @@ typedef enum {
 static inline const char* wc_strerror(wc_err e)
 {
     switch (e) {
-        case WC_OK:             return "ok";
-        case WC_ERR_FULL:       return "full";
-        case WC_ERR_EMPTY:      return "empty";
-        case WC_ERR_INVALID_OP: return "invalid op";
-        default:                return "unknown";
+    case WC_OK:
+        return "ok";
+    case WC_ERR_FULL:
+        return "full";
+    case WC_ERR_EMPTY:
+        return "empty";
+    case WC_ERR_INVALID_OP:
+        return "invalid op";
+    default:
+        return "unknown";
     }
 }
 
@@ -341,7 +346,7 @@ static inline void wc_perror(const char* prefix)
 // genVec growth settings (user can change)
 
 #ifndef GENVEC_GROWTH
-    #define GENVEC_GROWTH 1.5F      // vec capacity multiplier
+#define GENVEC_GROWTH 1.5F // vec capacity multiplier
 #endif
 
 
@@ -353,9 +358,9 @@ typedef struct {
     // Pointer to shared type-ops vtable (or NULL for POD types)
     const container_ops* ops;
 
-    u64 size;       // Number of elements currently in vector
-    u64 capacity;   // Total allocated capacity (in elements)
-    u32 data_size;  // Size of each element in bytes
+    u64 size;      // Number of elements currently in vector
+    u64 capacity;  // Total allocated capacity (in elements)
+    u32 data_size; // Size of each element in bytes
 
 } genVec;
 
@@ -365,7 +370,7 @@ typedef struct {
 // Convenience: access ops callbacks safely
 #define VEC_COPY_FN(vec) ((vec)->ops ? (vec)->ops->copy_fn : NULL)
 #define VEC_MOVE_FN(vec) ((vec)->ops ? (vec)->ops->move_fn : NULL)
-#define VEC_DEL_FN(vec)  ((vec)->ops ? (vec)->ops->del_fn  : NULL)
+#define VEC_DEL_FN(vec)  ((vec)->ops ? (vec)->ops->del_fn : NULL)
 
 
 
