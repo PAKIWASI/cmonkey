@@ -157,11 +157,14 @@ WordBank* wordbank_create(const char* filename)
     // TOO MANY WORDS
     // randomly load a block of 100k words
     // randomly choose an offset and select next 100K (wrapped)
-    pcg32_rand_seed_time();
     // if there are 200K words, we will choose 100K
     // for less than 200K, it's fine as is
+    pcg32_rand_seed_time();
+    int og_num_words = (int)num_words;
     if (num_words >= MAX_LOAD_WORDS * 2) {
         // words_arr + 1 points to the first word
+        words_arr += (int)pcg32_rand_bounded(num_words);
+        num_words = MAX_LOAD_WORDS;
     }
 
 
@@ -175,7 +178,7 @@ WordBank* wordbank_create(const char* filename)
     // Calculate exact arena size: sum(word_len) + num_words NUL bytes
     u64 bytes_needed = 0;
     u32 found        = 0;
-    for (int i = words_arr + 1; i < num_tokens && found < num_words; i++) {
+    for (int i = words_arr + 1; i < num_tokens && found < num_words; i = (i + 1) % og_num_words) {
         if (toks[i].parent == words_arr && toks[i].type == JSMN_STRING) {
             bytes_needed += (u64)(toks[i].end - toks[i].start) + 1;
             found++;
