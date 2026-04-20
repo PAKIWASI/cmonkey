@@ -8,6 +8,7 @@
 
 // cursor
 void draw_move(term_buf* b, int row, int col);
+
 void draw_move_col(term_buf* b, int col);
 
 // colors (true color)

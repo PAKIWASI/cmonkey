@@ -27,6 +27,8 @@ set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
 
 set (SRC_FILES
     src/wordbank.c
+    src/draw.c
+    src/term_buf.c
     src/wc_imp.c
 )
 
