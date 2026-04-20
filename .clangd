@@ -1,10 +1,12 @@
 CompileFlags:
   CompilationDatabase: build/
   Add:
-    - -std=c11
-    - -Wpedantic
+    - -std=gnu11
+    - -Wall
+    - -Wextra
     - -Wstrict-prototypes
     - -Wconversion
+    - -Wshadow
     - -Wwrite-strings
     - -Wpointer-arith
     - -Wformat=2
@@ -29,14 +31,14 @@ Diagnostics:
       - readability-uppercase-literal-suffix
       - readability-avoid-const-params-in-decls
       - readability-isolate-declaration
-      - readability-non-const-parameter 
+      - readability-non-const-parameter
       - readability-avoid-nested-conditional-operator
-      
+
       - bugprone-easily-swappable-parameters
-      - bugprone-assignment-in-if-condition 
+      - bugprone-assignment-in-if-condition
 
-      - cert-err33-c 
-      - cert-dcl03-c 
+      - cert-err33-c
+      - cert-dcl03-c
 
-      - misc-include-cleaner 
+      - misc-include-cleaner
       - misc-no-recursion

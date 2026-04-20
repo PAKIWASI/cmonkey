@@ -42,56 +42,64 @@
 
 // TODO: warm paths ?
 
-#define WARN(fmt, ...)                                            \
-    do {                                                          \
-        printf(WC_COLOR_YELLOW "[WARN]"                              \
-                            " %s:%d:%s(): " fmt "\n" WC_COLOR_RESET, \
-               __FILE__, __LINE__, __func__, ##__VA_ARGS__);      \
-    } while (0)
+#define WARN(fmt, ...)                                                  \
+    ({                                                                  \
+        printf(WC_COLOR_YELLOW "[WARN]"                                 \
+                               " %s:%d:%s(): " fmt "\n" WC_COLOR_RESET, \
+               __FILE__, __LINE__, __func__, ##__VA_ARGS__);            \
+    })
 
-#define FATAL(fmt, ...)                                         \
-    do {                                                        \
-        fprintf(stderr,                                         \
-                WC_COLOR_RED "[FATAL]"                             \
-                          " %s:%d:%s(): " fmt "\n" WC_COLOR_RESET, \
-                __FILE__, __LINE__, __func__, ##__VA_ARGS__);   \
-        exit(EXIT_FAILURE);                                     \
-    } while (0)
+#define FATAL(fmt, ...)                                               \
+    ({                                                                \
+        fprintf(stderr,                                               \
+                WC_COLOR_RED "[FATAL]"                                \
+                             " %s:%d:%s(): " fmt "\n" WC_COLOR_RESET, \
+                __FILE__, __LINE__, __func__, ##__VA_ARGS__);         \
+        exit(EXIT_FAILURE);                                           \
+    })
 
 #define CHECK_WARN(cond, fmt, ...)                           \
-    do {                                                     \
+    ({                                                       \
         if (__builtin_expect(!!(cond), 0)) {                 \
             WARN("Check: (%s): " fmt, #cond, ##__VA_ARGS__); \
         }                                                    \
-    } while (0)
+    })
 
 #define CHECK_WARN_RET(cond, ret, fmt, ...)                  \
-    do {                                                     \
+    ({                                                       \
         if (__builtin_expect(!!(cond), 0)) {                 \
             WARN("Check: (%s): " fmt, #cond, ##__VA_ARGS__); \
             return ret;                                      \
         }                                                    \
-    } while (0)
+    })
 
 #define CHECK_FATAL(cond, fmt, ...)                           \
-    do {                                                      \
+    ({                                                        \
         if (__builtin_expect(!!(cond), 0)) {                  \
             FATAL("Check: (%s): " fmt, #cond, ##__VA_ARGS__); \
         }                                                     \
-    } while (0)
+    })
 
-#define LOG(fmt, ...)                                       \
-    do {                                                    \
-        printf(WC_COLOR_CYAN "[LOG]"                           \
-                          " : %s(): " fmt "\n" WC_COLOR_RESET, \
-               __func__, ##__VA_ARGS__);                    \
-    } while (0)
+#define LOG(fmt, ...)                                             \
+    ({                                                            \
+        printf(WC_COLOR_CYAN "[LOG]"                              \
+                             " : %s(): " fmt "\n" WC_COLOR_RESET, \
+               __func__, ##__VA_ARGS__);                          \
+    })
+
+
+#define MALLOC(size, cap, name)                      \
+    ({                                               \
+        void* _mlcd = malloc((u64)size * cap);       \
+        CHECK_FATAL(!_mlcd, #name " malloc failed"); \
+        _mlcd;                                       \
+    })
 
 
 // TYPES
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 typedef uint8_t  u8;
 typedef uint8_t  b8;

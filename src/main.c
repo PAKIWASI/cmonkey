@@ -13,8 +13,38 @@
 #define CURR_FILE FILE_PATH_ENG450K
 
 
+#include <termios.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+
+static struct termios orig_termios;
+
+void term_raw_mode(void) 
+{
+    tcgetattr(STDIN_FILENO, &orig_termios);
+    struct termios raw = orig_termios;
+    raw.c_lflag &= ~(ECHO | ICANON);  // no echo, char-by-char input
+    raw.c_cc[VMIN] = 1;
+    raw.c_cc[VTIME] = 0;
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+}
+
+void term_restore(void) {
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
+}
+
+void term_get_size(int *rows, int *cols) {
+    struct winsize ws;
+    // terminal io control get win size
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
+    *rows = ws.ws_row;
+    *cols = ws.ws_col;
+}
+
+
 int main(void)
 {
+    term_raw_mode();
 
     return 0;
 }

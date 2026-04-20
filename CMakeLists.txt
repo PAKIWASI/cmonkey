@@ -7,12 +7,13 @@ project(cmonkey LANGUAGES C)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+set(CMAKE_C_EXTENSIONS ON)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
 endif()
+
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 set(CMAKE_C_FLAGS_DEBUG
     "-g -O0 -fno-omit-frame-pointer -fsanitize=address,undefined")
