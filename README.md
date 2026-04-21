@@ -11,9 +11,10 @@ cmonkey/
 │   ├── window.h          # window_t — clipping regions / panels
 │   ├── draw.h            # raw ANSI emit functions
 │   ├── theme.h           # theme_t, rgb_t, border styles
-│   ├── cursor.h          # cursor_t — smooth movement, blink, trail
+│   ├── cursor.h          # cursor_t — smooth movement, blink, trail, shape
 │   ├── input.h           # key_event_t, key parser
 │   ├── config.h          # config loading from JSON
+│   ├── time.h            # handeling timer for test, cursor, FPS
 │   └── widgets.h         # border, progress bar, word display, status
 │
 ├── src/

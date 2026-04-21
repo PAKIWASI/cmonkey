@@ -27,6 +27,7 @@ void tb_appendf(term_buf* b, const char* fmt, ...);  // printf-style
 
 void tb_flush(term_buf* b);   // single write() to STDOUT_FILENO
 
+// TODO:
 void tb_resize(term_buf* b, u64 new_cap);
 
 #endif // CMONKEY_TERM_BUF_H

@@ -5,29 +5,38 @@
 
 
 typedef struct {
-    u8 r, g, b; 
+    u8 r, g, b;
 } rgb;
 
+// attrs bitmask — maps directly to draw_* calls
+#define ATTR_BOLD      (1 << 0)
+#define ATTR_ITALIC    (1 << 1)
+#define ATTR_UNDERLINE (1 << 2)
+#define ATTR_DIM       (1 << 3)
+#define ATTR_STRIKE    (1 << 4)
+
+// one semantic color slot with all its styling attached
+// color + how to draw it
+typedef struct {
+    rgb  fg;
+    rgb  bg;
+    u8   attrs;       // bitmask of ATTR_* above
+    bool has_bg;      // false = skip bg (inherit terminal)
+} color_role;
 
 typedef struct {
-    rgb fg, bg;        // defaults
-    rgb accent;        // highlights, cursor
-    rgb correct;       // correct keystrokes
-    rgb wrong;         // wrong keystrokes
-    rgb dim;           // ghost/upcoming text
+    char name[64];
 
-    // border style: 0=sharp, 1=rounded, 2=bold
-    int border_style;
-} theme;
+    color_role base;       // replaces fg/bg
+    color_role accent;
+    color_role correct;
+    color_role wrong;
+    color_role dim;
+    color_role warning;    // new — low time, error states
+    color_role cursor;
+    u8  border_style;   // move this out of here and in config
+} cmonkey_theme;
 
-
-// border character sets indexed by style enum
-typedef enum {
-    BORDER_SHARP    = 0,
-    BORDER_ROUNDED  = 1,
-    BORDER_BOLD     = 2,
-    BORDER_DOUBLE   = 3
-} border_style;
 
 static const char* BORDER_CHARS[4][6] = {
     /* tl      tr      bl      br      v    h   */
@@ -41,9 +50,7 @@ static const char* BORDER_CHARS[4][6] = {
 };
 
 
-/* static inline: definition lives in the header, each TU gets its own copy.
-   Plain 'inline' without 'static' requires an external definition elsewhere — 
-   never use it in headers for functions with bodies.                          */
+
 
 static inline rgb rgb_hex(uint32_t hex) {
     return (rgb){ (hex >> 16) & 0xFF, (hex >> 8) & 0xFF, hex & 0xFF };
@@ -51,17 +58,17 @@ static inline rgb rgb_hex(uint32_t hex) {
 
 static inline rgb rgb_lerp(rgb a, rgb b, float t) {
     return (rgb){
-        (uint8_t)(a.r + (b.r - a.r) * t),
-        (uint8_t)(a.g + (b.g - a.g) * t),
-        (uint8_t)(a.b + (b.b - a.b) * t),
+        (u8)((float)a.r + ((float)(b.r - a.r) * t)),
+        (u8)((float)a.g + ((float)(b.g - a.g) * t)),
+        (u8)((float)a.b + ((float)(b.b - a.b) * t)),
     };
 }
 
 static inline rgb rgb_dim(rgb c, float factor) {
     return (rgb){
-        (uint8_t)(c.r * factor),
-        (uint8_t)(c.g * factor),
-        (uint8_t)(c.b * factor),
+        (u8)((float)c.r * factor),
+        (u8)((float)c.g * factor),
+        (u8)((float)c.b * factor),
     };
 }
 

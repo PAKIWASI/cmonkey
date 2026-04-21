@@ -4,8 +4,10 @@
 #include <string.h>
 #include <unistd.h>
 
-#define GET_LEN_POS(b)   (b->data + b->len)
-#define GAURD_SIZE(b, n) (b->len + n >= b->cap)
+
+#define GET_LEN_POS(b)      (b->data + b->len)
+#define GAURD_SIZE(b, n)    (b->len + n >= b->cap)
+#define MAYBE_GROW_BUF(b)   ()
 
 
 void tb_init(term_buf* b, u32 cap)
