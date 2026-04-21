@@ -21,6 +21,9 @@ WordBank* wordbank_create(const char* filename, u32 num_random_words);
 // Destroy and free all memory.
 void wordbank_destroy(WordBank* wb);
 
+// TODO:
+void wordbank_switch(WordBank* wb, const char* filename);
+
 // Get the C string for word at index i (pointer into arena)
 static inline const char* wordbank_word_at(WordBank* wb, u32 i)
 {

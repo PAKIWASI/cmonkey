@@ -159,7 +159,8 @@ static inline void draw_role(term_buf* b, const color_role* r)
 void draw_box(term_buf* b, u32 row, u32 col,
               u32 h, u32 w, border_style style, const color_role* role);
 
-void draw_words(term_buf* b, u32 row, u32 col, const char** words);
+// TODO:
+void draw_words(term_buf* b, u32 row, u32 col, const char** words, cmonkey_theme* t);
 
 
 #endif // CMONKEY_DRAW_H

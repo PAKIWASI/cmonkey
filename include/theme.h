@@ -38,18 +38,6 @@ typedef struct {
 } cmonkey_theme;
 
 
-static const char* BORDER_CHARS[4][6] = {
-    /* tl      tr      bl      br      v    h   */
-    { "┌",   "┐",   "└",   "┘",   "│", "─" },   /* sharp   */
-
-    { "╭",   "╮",   "╰",   "╯",   "│", "─" },   /* rounded */
-
-    { "┏",   "┓",   "┗",   "┛",   "┃", "━" },   /* bold    */
-
-    { "╔",   "╗",   "╚",   "╝",   "║", "═" },   /* double  */
-};
-
-
 
 static inline rgb rgb_hex(uint32_t hex) {
     return (rgb){ (hex >> 16) & 0xFF, (hex >> 8) & 0xFF, hex & 0xFF };

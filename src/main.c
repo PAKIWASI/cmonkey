@@ -1,6 +1,9 @@
+#include "config.h"
 #include "term_buf.h"
 #include "draw.h"
+#include "theme.h"
 
+#include <stdio.h>
 #include <termios.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
@@ -42,23 +45,26 @@ static void on_resize(int sig) { (void)sig; g_resized = 1; }
 int main(void)
 {
     term_raw_mode();
+    // TODO: was not working
     signal(SIGWINCH, on_resize);
 
-    // app a = {0};
-    // a.t = make_catppuccin_mocha();
-    // term_get_size(&a.rows, &a.cols);
 
-    // buffer: rows * cols * 16 bytes is generous
-    term_buf buf;
-    // tb_init(&buf, (u32)(a.rows * a.cols * 16));
+    term_buf buf;       // rows, cols, size ???
+    tb_init(&buf, (u32)(80 * 120 * 16));
 
     draw_alt_screen_enter(&buf);
     draw_hide_cursor(&buf);
     tb_flush(&buf);
 
     // main loop
-    while () {
+    char c = ' ';
+    while (c != 'q') {
+        // TODO: how to timeout this to 100ms ?
+        c = (char)getchar();
+        color_role r = { {100, 80, 110}, {0, 0, 0}, 0, false};
+        draw_box(&buf, 10, 10, 70, 110, BORDER_ROUNDED, &r);
 
+        tb_flush(&buf);
     }
 
     // cleanup

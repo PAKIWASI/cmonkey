@@ -5,12 +5,14 @@
 #include "theme.h"
 
 
+
 typedef struct {
     u8    border_style;          // move this out of here and in config
     u8    cursor_style;          // block/bar/underline/none
     u8    cursor_trail_len;      // 0 = disabled, max 4
     float cursor_trail_decay_ms; // how fast trail fades to bg
 } cmonkey_conf;
+
 
 typedef enum {
     CURSOR_BLOCK     = 0,   // default
@@ -26,6 +28,18 @@ typedef enum {
     BORDER_BOLD    = 2,
     BORDER_DOUBLE  = 3,
 } border_style;
+
+
+static const char* BORDER_CHARS[4][6] = {
+    /* tl      tr      bl      br      v    h   */
+    { "┌",   "┐",   "└",   "┘",   "│", "─" },   /* sharp   */
+
+    { "╭",   "╮",   "╰",   "╯",   "│", "─" },   /* rounded */
+
+    { "┏",   "┓",   "┗",   "┛",   "┃", "━" },   /* bold    */
+
+    { "╔",   "╗",   "╚",   "╝",   "║", "═" },   /* double  */
+};
 
 
 bool cmonkey_import_conf(cmonkey_conf* conf, const char* confpath);
