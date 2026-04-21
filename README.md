@@ -1,6 +1,6 @@
-# cmonkey — project architecture
+# cmonkey
 
-## project layout
+## Layout
 
 ```
 cmonkey/
@@ -312,66 +312,3 @@ main loop
   └─ nanosleep(remaining 16ms budget)
 ```
 
----
-
-## config.json format
-
-```json
-{
-    "theme": "themes/catppuccin_mocha.json",
-    "word_list": "words/english_1k.txt",
-    "word_count": 50,
-    "time_limit_sec": 60,
-    "show_wpm": true,
-    "show_progress": true,
-    "smooth_cursor": true,
-    "cursor_blink": true,
-    "cursor_blink_ms": 530
-}
-```
-
-## theme JSON format
-
-```json
-{
-    "name": "Catppuccin Mocha",
-    "border": "rounded",
-    "colors": {
-        "bg":             "#1e1e2e",
-        "fg":             "#cdd6f4",
-        "dim":            "#585b70",
-        "accent":         "#cba6f7",
-        "correct":        "#a6e3a1",
-        "wrong":          "#f38ba8",
-        "border_normal":  "#585b70",
-        "border_focused": "#cba6f7",
-        "border_title":   "#cdd6f4",
-        "status_bar_bg":  "#181825",
-        "status_bar_fg":  "#a6adc8"
-    }
-}
-```
-
-Parsing a hex color with jsmn:
-```c
-// after extracting the string token value e.g. "#cba6f7"
-static rgb_t parse_hex(const char *s) {
-    if (*s == '#') s++;
-    uint32_t v = (uint32_t)strtol(s, NULL, 16);
-    return rgb_hex(v);
-}
-```
-
----
-
-## on config format choice
-
-**JSON + jsmn** is fine if it's already a dependency. The main limitation is no comments — mitigate by shipping well-documented example theme files and a README.
-
-**Alternatives worth knowing:**
-
-- `key = value` (hand-rolled, ~50 lines) — friendliest for users, supports `# comments`, trivial to parse, but no nesting so theme must be a separate file anyway
-- TOML — best user experience, supports comments and nested tables, but needs a TOML parser dependency
-- JSON — fine for machine-generated or developer-edited configs, no comments
-
-For this project the two-file split (a `config.json` for settings + separate theme JSON files) is the right structure regardless of format. Keep them separate so users can share theme files independently of their personal config.

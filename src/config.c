@@ -1,4 +1,4 @@
-#include "conf.h"
+#include "config.h"
 
 #include <string.h>
 
@@ -48,6 +48,9 @@ bool cmonkey_import_conf(cmonkey_conf* conf, const char* confpath)
 
 bool cmonkey_import_theme(cmonkey_theme* t, const char* themepath)
 {
+
+    // TODO: t->name;   ?? filename
+
     FILE* f = fopen(themepath, "r");
     if (!f) {
         return false;
@@ -70,10 +73,14 @@ bool cmonkey_import_theme(cmonkey_theme* t, const char* themepath)
             continue;
         }
 
+        // TODO: we are only setting fg's so why do we even need role?
+
         if (strcmp(key, "bg") == 0) {
             t->base.bg = rgb_hex_str(val);
         } else if (strcmp(key, "fg") == 0) {
             t->base.fg = rgb_hex_str(val);
+        } else if (strcmp(key, "main_text") == 0) {
+            t->main_text.fg = rgb_hex_str(val);
         } else if (strcmp(key, "correct") == 0) {
             t->correct.fg = rgb_hex_str(val);
         } else if (strcmp(key, "wrong") == 0) {
@@ -100,11 +107,9 @@ static rgb rgb_hex_str(const char* s)
     if (s[0] == '#') {
         s++;
     }
-    uint32_t hex = (uint32_t)strtoul(s, NULL, 16);
+    u32 hex = (u32)strtoul(s, NULL, 16);
     return rgb_hex(hex);
 }
-
-
 
 
 static border_style parse_border_style(const char* s)

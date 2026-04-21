@@ -2,7 +2,7 @@
 #define CMONKEY_DRAW_H
 
 
-#include "conf.h"
+#include "config.h"
 #include "term_buf.h"
 #include "theme.h"
 
@@ -11,12 +11,12 @@
 
 // cursor
 
-static inline void draw_move(term_buf* b, int row, int col)
+static inline void draw_move(term_buf* b, u32 row, u32 col)
 {
     tb_appendf(b, "\033[%d;%dH", row, col);
 }
 
-static inline void draw_move_col(term_buf* b, int col)
+static inline void draw_move_col(term_buf* b, u32 col)
 {
     tb_appendf(b, "\033[%dG", col); // move within current row
 }
@@ -125,9 +125,9 @@ static inline void draw_alt_screen_exit(term_buf* b)
 
 
 // a string horizontally, return starting column (1-indexed)
-static inline int center_col(int cols, int str_len)
+static inline u32 center_col(u32 cols, u32 str_len)
 {
-    int col = (cols - str_len) / 2;
+    u32 col = (cols - str_len) / 2;
     return col < 1 ? 1 : col + 1; // +1: ANSI columns are 1-indexed
 }
 
@@ -156,9 +156,10 @@ static inline void draw_role(term_buf* b, const color_role* r)
 
 // common shit to draw
 
-void draw_box(term_buf* b, int row, int col,
-              int h, int w, border_style style, const color_role* role);
+void draw_box(term_buf* b, u32 row, u32 col,
+              u32 h, u32 w, border_style style, const color_role* role);
 
+void draw_words(term_buf* b, u32 row, u32 col, const char** words);
 
 
 #endif // CMONKEY_DRAW_H

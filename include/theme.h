@@ -27,14 +27,14 @@ typedef struct {
 typedef struct {
     char name[64];
 
-    color_role base;       // replaces fg/bg
+    color_role base;
     color_role accent;
+    color_role main_text;
     color_role correct;
     color_role wrong;
     color_role dim;
-    color_role warning;    // new — low time, error states
+    color_role warning;    // low time, error states
     color_role cursor;
-    u8  border_style;   // move this out of here and in config
 } cmonkey_theme;
 
 
@@ -48,7 +48,6 @@ static const char* BORDER_CHARS[4][6] = {
 
     { "╔",   "╗",   "╚",   "╝",   "║", "═" },   /* double  */
 };
-
 
 
 

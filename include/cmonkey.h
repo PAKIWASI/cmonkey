@@ -1,7 +1,7 @@
 #ifndef CMONKEY_H
 #define CMONKEY_H
 
-#include "conf.h"
+#include "config.h"
 
 // cmonkey app state
 
