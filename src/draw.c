@@ -1,4 +1,5 @@
 #include "draw.h"
+#include "term_buf.h"
 
 
 
@@ -28,3 +29,21 @@ void draw_box(term_buf* b, u32 row, u32 col,
 
     draw_reset(b);
 }
+
+void draw_words(term_buf* b, u32 row, u32 col,
+                u32* words, u32 n, cmonkey_theme* t, WordBank* wb)
+{
+    // draw_role(b, &t->main_text);
+
+    draw_move(b, row, col);
+
+    // TODO: we need some sort of window info here
+    // start writing words, if len > remaining space, we move to next line
+    for (u32 i = 0; i < n; i++) {
+        tb_append(b, wordbank_word_at(wb, words[i]));
+    }
+
+    draw_reset(b);
+}
+
+

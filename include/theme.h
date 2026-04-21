@@ -25,6 +25,7 @@ typedef struct {
 } color_role;
 
 typedef struct {
+
     char name[64];
 
     color_role base;
@@ -35,11 +36,12 @@ typedef struct {
     color_role dim;
     color_role warning;    // low time, error states
     color_role cursor;
+
 } cmonkey_theme;
 
 
 
-static inline rgb rgb_hex(uint32_t hex) {
+static inline rgb rgb_hex(u32 hex) {
     return (rgb){ (hex >> 16) & 0xFF, (hex >> 8) & 0xFF, hex & 0xFF };
 }
 
@@ -58,5 +60,7 @@ static inline rgb rgb_dim(rgb c, float factor) {
         (u8)((float)c.b * factor),
     };
 }
+
+// TODO: a function to combine two rgb colors
 
 #endif // CMONKEY_THEME_H

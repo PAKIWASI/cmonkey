@@ -288,11 +288,6 @@ void wordbank_random_words(WordBank* wb, u32* buff, u32 buff_size)
 
     u32 total = (u32)wb->words->size;
 
-    // Reset scratch to identity permutation before each shuffle
-    // for (u32 i = 0; i < total; i++) {
-    //     wb->scratch[i] = i;
-    // }
-
     for (u32 i = 0; i < buff_size; i++) {
         u32 j = i + pcg32_rand_bounded(total - i);
         wb->swapped_j[i] = j;

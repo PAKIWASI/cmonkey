@@ -1,10 +1,10 @@
 #ifndef CMONKEY_DRAW_H
 #define CMONKEY_DRAW_H
 
-
 #include "config.h"
 #include "term_buf.h"
 #include "theme.h"
+#include "wordbank.h"
 
 
 #define SPREAD(rgb) rgb.r, rgb.g, rgb.b
@@ -160,7 +160,8 @@ void draw_box(term_buf* b, u32 row, u32 col,
               u32 h, u32 w, border_style style, const color_role* role);
 
 // TODO:
-void draw_words(term_buf* b, u32 row, u32 col, const char** words, cmonkey_theme* t);
 
+void draw_words(term_buf* b, u32 row, u32 col,
+                u32* words, u32 n, cmonkey_theme* t, WordBank* wb);
 
 #endif // CMONKEY_DRAW_H
