@@ -1,13 +1,13 @@
 #include "draw.h"
 #include "term_buf.h"
-
+#include <string.h>
 
 
 void draw_box(term_buf* b, u32 row, u32 col,
               u32 h, u32 w, border_style style, const color_role* role)
 {
     const char** bc = BORDER_CHARS[style];
-    draw_role(b, role); // enable user configured colors via role
+    draw_role(b, role);
 
     // top edge
     draw_move(b, row, col);
@@ -31,16 +31,28 @@ void draw_box(term_buf* b, u32 row, u32 col,
 }
 
 void draw_words(term_buf* b, u32 row, u32 col,
-                u32* words, u32 n, cmonkey_theme* t, WordBank* wb)
+                const char** words, u32 n,
+                const color_role* role, u32 max_cols)
 {
-    // draw_role(b, &t->main_text);
+    draw_role(b, role);
 
-    draw_move(b, row, col);
+    u32 cur_col = col;
+    u32 cur_row = row;
 
-    // TODO: we need some sort of window info here
-    // start writing words, if len > remaining space, we move to next line
     for (u32 i = 0; i < n; i++) {
-        tb_append(b, wordbank_word_at(wb, words[i]));
+        const char* w   = words[i];
+        u32         len = (u32)strlen(w);
+
+        // +1 for the trailing space between words
+        if (cur_col + len + 1 > col + max_cols) {
+            cur_row++;
+            cur_col = col;
+        }
+
+        draw_move(b, cur_row, cur_col);
+        tb_append(b, w);
+        tb_append(b, " ");
+        cur_col += len + 1;
     }
 
     draw_reset(b);

@@ -30,6 +30,8 @@ set (SRC_FILES
     src/draw.c
     src/term_buf.c
     src/wc_imp.c
+    src/cmonkey.c
+    src/config.c
 )
 
 add_executable(main

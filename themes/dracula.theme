@@ -15,4 +15,6 @@ theme[accent]="#bd93f9"
 theme[cursor]="#f8f8f2"
 theme[warning]="#ffb86c"
 
-
+# border + cursor appearance live in the theme file
+theme[border_style]="rounded"
+theme[cursor_style]="bar"
