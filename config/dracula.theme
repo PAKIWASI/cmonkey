@@ -1,15 +1,16 @@
 # cmonkey theme — dracula
 
-# base
-theme[bg]="#282a36"
-theme[fg]="#f8f8f2"
 
-# typing
-theme[correct]="#50fa7b"
-theme[wrong]="#ff5555"
-theme[dim]="#44475a"
+main_fg     = "#f8f8f2"
+main_bg     = "#282a36"
 
-# ui
-theme[accent]="#bd93f9"
-theme[cursor]="#f8f8f2"
-theme[warning]="#ffb86c"
+border      = "#50fa7b"
+cursor      = "#bd93f9"
+
+# no value means it's inferred from rest of the theme
+text_fg     =
+text_bg     =
+text_dim    = "#44475a"
+
+correct     = "#50fa7b"
+incorrect   = "#ff5555"

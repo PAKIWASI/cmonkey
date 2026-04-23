@@ -54,9 +54,11 @@ static inline void draw_fg(term_buf* b, const char *escape) { tb_append_cstr(b, 
 static inline void draw_bg(term_buf* b, const char *escape) { tb_append_cstr(b, escape); }
 
 
-static inline void draw_word(term_buf* b, const char* text)
+// full draw functions for elements
+static inline void draw_box(term_buf* b, u32 w, u32 h)
 {
-    tb_append_cstr(b, text);
+
+    // TODO: reset at the end
 }
 
 

@@ -13,9 +13,9 @@ static int term_buf_draw(void)
     while (1) {
         draw_move(&b, 20, 20);
         draw_bold_on(&b);
-        draw_word(&b, "hello");
+        tb_append_cstr(&b, "ehllo");
         draw_bold_off(&b);
-        draw_word(&b, "hello");
+        tb_append_cstr(&b, "ehllo");
 
         tb_flush(&b);
     }
