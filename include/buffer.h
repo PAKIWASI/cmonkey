@@ -21,7 +21,9 @@ void tb_append_cstr(term_buf* b, const char* s);
 
 void tb_append_n(term_buf* b, const char* s, u32 n);
 
-void tb_append_v(term_buf* b, ...);
+void tb_append_v(term_buf* b, const char* fmt, ...);
+
+void tb_flush(term_buf* b);
 
 
 #endif // CMONKEY_BUFFER_H

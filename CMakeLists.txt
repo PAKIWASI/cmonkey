@@ -28,6 +28,7 @@ set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
 set (SRC_FILES
     src/wc_imp.c
     src/wordbank.c
+    src/buffer.c
 )
 
 add_executable(main
@@ -41,6 +42,7 @@ target_link_libraries(main PRIVATE ${CURSES_LIBRARIES})
 add_executable(tests
     tests/test_main.c
     tests/test_json_wordbank_loader.c
+    tests/test_buf_draw.c
     ${SRC_FILES}
 )
 target_include_directories(tests PRIVATE include tests external)
