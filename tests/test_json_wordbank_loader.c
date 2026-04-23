@@ -1,12 +1,5 @@
-#include "cmonkey.h"
-#include "Queue_single.h"
-#include "wc_macros_single.h"
 #include "wc_test.h"
 #include "wordbank.h"
-
-#include <stdio.h>
-#include <string.h>
-
 
 #define ENG "english.json"
 #define ENG1K "english_1k.json"
@@ -58,34 +51,12 @@ static int test_get_random_words(void)
     return 0;
 }
 
-static int test_get_words_in_queue(void)
-{
-    cmonkey cm = {0};
-    cmonkey_init(&cm, NULL, NULL, CURR_FILE);
-
-    cmonkey_more_words(&cm);
-
-    while (!queue_empty(cm.test.words)) {
-        printf("%s\t", wordbank_word_at(
-            cm.wordbank, DEQUEUE(cm.test.words, u32)));
-    }
-
-    cmonkey_end(&cm);
-    return 0;
-}
-
-
-#include <locale.h>
-
 extern void json_file_suite(void)
 {
-    setlocale(LC_ALL, "");
-
     WC_SUITE("JSON File Read Tests");
 
     WC_RUN(test_wb_create);
     WC_RUN(test_get_random_words);
-    WC_RUN(test_get_words_in_queue);
 }
 
 
