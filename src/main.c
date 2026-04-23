@@ -85,10 +85,11 @@ int main(void)
     draw_show_cursor(&buf);
     tb_flush(&buf);
 
-    cmonkey_free(&cm);
+    cmonkey_end(&cm);
     tb_free(&buf);
     term_restore();
 
     return 0;
 }
+
 

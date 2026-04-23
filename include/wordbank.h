@@ -1,7 +1,7 @@
 #ifndef CMONKEY_WORDBANK_H
 #define CMONKEY_WORDBANK_H
 
-#include "gen_vector_single.h"
+#include "Queue_single.h"
 #include "arena_single.h"
 
 
@@ -10,6 +10,7 @@ typedef struct {
     genVec* words;      // vec of u32 byte-offsets into arena
     u32*    scratch;    // pre-allocated index array for random selection (size == words->size)
     u32*    swapped_j;  // tracks what indices were swapped, to swap them back afterwards
+    u32     num_random_words;   // how many words(idx) user will want each call
 } WordBank;
 
 // TODO: 
@@ -33,6 +34,13 @@ static inline const char* wordbank_word_at(WordBank* wb, u32 i)
 
 // Partial Fisher-Yates: O(N) time, my modified verion: O(buff_size)
 void wordbank_random_words(WordBank* wb, u32* buff, u32 buff_size);
+// TODO:say i load 60 words, then for the same test, I load 60 more, what are the chances
+// that words will be repeated ? wrt total no of words
+// maybe we should load 200 words ie buff_size == 200
+
+
+void wordbank_random_words_in_queue(WordBank* wb, Queue* q);
+
 
 static inline u64 wordbank_size(WordBank* wb) {
     return genVec_size(wb->words);

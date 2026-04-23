@@ -1,6 +1,8 @@
 #include "config.h"
+
 #include <stdlib.h>
 #include <string.h>
+
 
 
 static rgb          rgb_hex_str(const char* s);
@@ -61,6 +63,7 @@ bool cmonkey_import_conf(cmonkey_conf* conf, const char* confpath)
     }
 
     fclose(f);
+    LOG("config loaded from %s", confpath);
     return true;
 }
 
@@ -84,7 +87,8 @@ bool cmonkey_import_theme(cmonkey_theme* t, const char* themepath)
     }
 
     char line[256];
-    while (fgets(line, sizeof(line), f)) {
+    while (fgets(line, sizeof(line), f)) 
+    {
         char* p = line;
         while (*p == ' ' || *p == '\t') {
             p++;
@@ -140,9 +144,9 @@ bool cmonkey_import_theme(cmonkey_theme* t, const char* themepath)
     }
 
     fclose(f);
+    LOG("theme loaded from %s", themepath);
     return true;
 }
-
 
 static rgb rgb_hex_str(const char* s)
 {
@@ -180,4 +184,5 @@ static cursor_style parse_cursor_style(const char* s)
     }
     return CURSOR_BLOCK;
 }
+
 

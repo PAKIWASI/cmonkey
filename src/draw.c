@@ -1,6 +1,7 @@
 #include "draw.h"
+#include "Queue_single.h"
 #include "term_buf.h"
-#include <string.h>
+#include "wc_macros_single.h"
 
 
 void draw_box(term_buf* b, u32 row, u32 col,
@@ -30,17 +31,18 @@ void draw_box(term_buf* b, u32 row, u32 col,
     draw_reset(b);
 }
 
-void draw_words(term_buf* b, u32 row, u32 col,
-                const char** words, u32 n,
-                const color_role* role, u32 max_cols)
-{
+void draw_words(
+    term_buf* b, u32 row, u32 col,
+    WordBank* wb, Queue* q, u32 n,
+    const color_role* role, u32 max_cols
+) {
     draw_role(b, role);
 
     u32 cur_col = col;
     u32 cur_row = row;
 
     for (u32 i = 0; i < n; i++) {
-        const char* w   = words[i];
+        const char* w   = wordbank_word_at(wb, DEQUEUE(q, u32));
         u32         len = (u32)strlen(w);
 
         // +1 for the trailing space between words
@@ -50,7 +52,7 @@ void draw_words(term_buf* b, u32 row, u32 col,
         }
 
         draw_move(b, cur_row, cur_col);
-        tb_append(b, w);
+        tb_appendn(b, w, n);
         tb_append(b, " ");
         cur_col += len + 1;
     }

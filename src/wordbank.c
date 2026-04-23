@@ -1,7 +1,7 @@
 #include "wordbank.h"
 #include "arena_single.h"
-#include "gen_vector_single.h"
 #include "random_single.h"
+#include "wc_macros_single.h"
 
 #define JSMN_PARENT_LINKS
 #include "jsmn.h"
@@ -240,7 +240,13 @@ WordBank* wordbank_create(const char* filename, u32 num_random_words)
     for (u32 k = 0; k < load_count; k++) {
         wb->scratch[k] = k;
     }
+
                             // DEBUG: NUM_RAND_WORDS
+    if (num_random_words == 0) {
+        WARN("num_random_words can't be 0");
+        goto cleanup;
+    }
+    wb->num_random_words = num_random_words;
     wb->swapped_j = malloc(num_random_words * sizeof(u32));
     if (!wb->swapped_j) {
         WARN("OOM scratch");
@@ -285,6 +291,7 @@ void wordbank_destroy(WordBank* wb)
 void wordbank_random_words(WordBank* wb, u32* buff, u32 buff_size)
 {
     CHECK_WARN_RET(!wb, , "null wordbank");
+    CHECK_WARN_RET(wb->num_random_words != buff_size, , "mismatch");
 
     u32 total = (u32)wb->words->size;
 
@@ -301,13 +308,40 @@ void wordbank_random_words(WordBank* wb, u32* buff, u32 buff_size)
 
     // Undo swaps in reverse — restores scratch to identity without full reset
     for (u32 i = buff_size; i-- > 0;) {
-        u32 j      = wb->swapped_j[i];
-
-        u32 tmp    = wb->scratch[i];
+        u32 j          = wb->swapped_j[i];
+        u32 tmp        = wb->scratch[i];
         wb->scratch[i] = wb->scratch[j];
         wb->scratch[j] = tmp;
     }
+}
 
+void wordbank_random_words_in_queue(WordBank* wb, Queue* q)
+{
+    CHECK_WARN_RET(!wb, , "wordbank is null");
+    CHECK_WARN_RET(!q, , "queue is null");
+
+    u32 total = (u32)wb->words->size;
+    u32 num   = wb->num_random_words;
+
+    for (u32 i = 0; i < num; i++) {
+        u32 j = i + pcg32_rand_bounded(total - i);
+        wb->swapped_j[i] = j;
+
+        u32 tmp         = wb->scratch[i];
+        wb->scratch[i]  = wb->scratch[j];
+        wb->scratch[j]  = tmp;
+
+        enqueue(q, cast(wb->scratch[i]));
+        // ENQUEUE(q, wb->scratch[i]);
+    }
+
+    // Undo swaps in reverse — restores scratch to identity without full reset
+    for (u32 i = num; i --> 0;) {
+        u32 j          = wb->swapped_j[i];
+        u32 tmp        = wb->scratch[i];
+        wb->scratch[i] = wb->scratch[j];
+        wb->scratch[j] = tmp;
+    }
 }
 
 

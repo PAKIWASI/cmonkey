@@ -1,8 +1,10 @@
 #ifndef CMONKEY_DRAW_H
 #define CMONKEY_DRAW_H
 
+#include "Queue_single.h"
 #include "term_buf.h"
 #include "theme.h"
+#include "wordbank.h"
 
 
 #define SPREAD(rgb) rgb.r, rgb.g, rgb.b
@@ -161,7 +163,7 @@ void draw_box(term_buf* b, u32 row, u32 col,
 // max_cols: available width so draw_words can wrap to next line
 void draw_words(
     term_buf* b, u32 row, u32 col,
-    const char** words, u32 n,
+    WordBank* wb, Queue* q, u32 n,
     const color_role* role, u32 max_cols
 );
 
