@@ -26,12 +26,8 @@ set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
 # find_package(Curses REQUIRED)
 
 set (SRC_FILES
-    src/wordbank.c
-    src/draw.c
-    src/term_buf.c
     src/wc_imp.c
-    src/cmonkey.c
-    src/config.c
+    src/wordbank.c
 )
 
 add_executable(main

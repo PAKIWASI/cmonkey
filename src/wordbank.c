@@ -1,7 +1,6 @@
 #include "wordbank.h"
 #include "arena_single.h"
 #include "random_single.h"
-#include "wc_macros_single.h"
 
 #define JSMN_PARENT_LINKS
 #include "jsmn.h"

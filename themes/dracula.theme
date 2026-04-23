@@ -2,8 +2,11 @@
 # empty value = use terminal default (transparent)
 
 # base
-theme[bg]="#282a36"
-theme[fg]="#f8f8f2"
+# theme[bg]="#282a36"
+# theme[fg]="#f8f8f2"
+
+theme[bg]="#50fa7b"
+theme[fg]="#50fa7b"
 
 # typing
 theme[correct]="#50fa7b"
