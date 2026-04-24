@@ -325,7 +325,7 @@ static int test_box(void)
     term_buf b;
     tb_create(&b, 40, 80);
 
-    draw_box_at(&b, 0, 0, 10, 10, &t, &c);
+    draw_box_at(&b, 20, 20, 10, 30, &t, &c);
 
     tb_flush(&b);
     tb_destroy(&b);

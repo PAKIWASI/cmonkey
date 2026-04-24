@@ -28,7 +28,7 @@ void draw_box_at(term_buf* b, u32 row, u32 col, u32 h, u32 w,
     BORDER_STYLE bs = DEFAULT_BORDER_STYLE;
     if (c) { bs = c->border_style; }
     // BUG: this causes crash on read?
-    const char** bc = (const char**)BORDER_CHARS[bs];
+    const char (*bc)[8] = BORDER_CHARS[bs];
 
     //top
     // top left
