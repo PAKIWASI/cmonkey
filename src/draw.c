@@ -5,12 +5,15 @@
 
 
 void draw_text_at(term_buf* b, u32 row, u32 col,
-                  const char* fg, const char* text)
+                  const char* fg, const cmonkey_theme* t, const char* text)
 {
     draw_move(b, row, col);
     if (fg && fg[0]) { draw_fg(b, fg); }
+
     tb_append_cstr(b, text);
-    tb_append_cstr(b, RESET);
+
+    if (t) { draw_theme_reset(b, t); }
+    else { draw_reset(b); }
 }
 
 
@@ -23,7 +26,8 @@ void draw_box_at(term_buf* b, u32 row, u32 col, u32 h, u32 w,
 
     // border style
     BORDER_STYLE bs = DEFAULT_BORDER_STYLE;
-    if (c && c->border_style) { bs = c->border_style; }
+    if (c) { bs = c->border_style; }
+    // BUG: this causes crash on read?
     const char** bc = (const char**)BORDER_CHARS[bs];
 
     //top
@@ -36,25 +40,25 @@ void draw_box_at(term_buf* b, u32 row, u32 col, u32 h, u32 w,
     // top right
     tb_append_cstr(b, bc[1]);
 
-    // sides verical
+    // Vertical sides
     for (u32 i = 0; i < h - 2; i++) {
-        draw_move(b, i, 0); tb_append_cstr(b, bc[4]);   // TODO: 1 or 0 ?
-        draw_move(b, i, w); tb_append_cstr(b, bc[4]);
+        draw_move(b, row + 1 + i, col);            // left side
+        tb_append_cstr(b, bc[4]);
+        draw_move(b, row + 1 + i, col + w - 1);    // right side
+        tb_append_cstr(b, bc[4]);
     }
 
-    // bottom
-    // bottom left
-    draw_move(b, h, 0);
-    tb_append_cstr(b, bc[2]);
-    // bottom horizontal
+    // Bottom border
+    draw_move(b, row + h - 1, col);
+    tb_append_cstr(b, bc[2]);                      // bottom-left
     for (u32 i = 0; i < w - 2; i++) {
         tb_append_cstr(b, bc[5]);
     }
-    // bottom right
-    tb_append_cstr(b, bc[3]);
+    tb_append_cstr(b, bc[3]);                      // bottom-right
 
     // reset
-    draw_clear(b, t);
+    if (t) { draw_theme_reset(b, t); }
+    else { draw_reset(b); }
 }
 
 

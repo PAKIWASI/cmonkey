@@ -121,6 +121,7 @@ void theme_load(cmonkey_theme* t, const char* filepath)
 
         if (!parse_kv(line, line_num, "theme", key, value)) { continue; }
 
+        // TODO: if text_fg/bg is empty, set main_bg/fg for it
         // Empty value → "keep at default" → skip
         if (value[0] == '\0') { continue; }
 

@@ -5,7 +5,6 @@
 #define COLOR_ESC_MAX 32      // enough for "\033[38;2;255;255;255m"
 
 
-// TODO: do i need null terminator?
 typedef struct {
     // Core colours
     char main_fg    [COLOR_ESC_MAX];

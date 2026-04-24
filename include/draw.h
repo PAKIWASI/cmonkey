@@ -110,7 +110,7 @@ static inline void draw_color_swatch(term_buf* b,
  *
  */
 void draw_text_at(term_buf* b, u32 row, u32 col,
-                  const char* fg, const char* text);
+                  const char* fg, const cmonkey_theme* t, const char* text);
 
 /*
  * Draw a box at row, col of size h, w

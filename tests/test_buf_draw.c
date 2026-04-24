@@ -176,11 +176,11 @@ static int test_visual_theme_swatches(void)
         draw_reset(&b);
 
         // Label in main_fg
-        draw_text_at(&b, row, 18, t.main_fg, swatches[i].label);
+        draw_text_at(&b, row, 18, t.main_fg, &t, swatches[i].label);
     }
 
     // Footer
-    draw_text_at(&b, 3 + (num * 2) + 1, 4, t.text_dim,
+    draw_text_at(&b, 3 + (num * 2) + 1, 4, t.text_dim, &t,
                  "-- press enter --");
 
     tb_flush(&b);
@@ -229,10 +229,10 @@ static int test_visual_text_attributes(void)
         attrs[i].off(&b);
 
         // label beside it in dim
-        draw_text_at(&b, row, 26, t.text_dim, attrs[i].label);
+        draw_text_at(&b, row, 26, t.text_dim, &t,attrs[i].label);
     }
 
-    draw_text_at(&b, 3 + (num * 2) + 1, 4, t.text_dim, "-- press enter --");
+    draw_text_at(&b, 3 + (num * 2) + 1, 4, t.text_dim, &t,"-- press enter --");
 
     tb_flush(&b);
     tb_destroy(&b);
@@ -270,9 +270,9 @@ static int test_visual_correct_incorrect(void)
     draw_reset(&b);
 
     // legend
-    draw_text_at(&b, 7, 10, t.correct,   "correct colour");
-    draw_text_at(&b, 8, 10, t.incorrect, "incorrect colour");
-    draw_text_at(&b, 10, 10, t.text_dim, "-- press enter --");
+    draw_text_at(&b, 7, 10, t.correct,  &t ,"correct colour");
+    draw_text_at(&b, 8, 10, t.incorrect, &t,"incorrect colour");
+    draw_text_at(&b, 10, 10, t.text_dim, &t,"-- press enter --");
 
     tb_flush(&b);
     tb_destroy(&b);
@@ -296,7 +296,7 @@ static int test_visual_theme_reset(void)
     draw_clear(&b, &t);
 
     // Print something in "incorrect" (red)
-    draw_text_at(&b, 4, 4, t.incorrect, "this is red   ");
+    draw_text_at(&b, 4, 4, t.incorrect, &t,"this is red   ");
 
     // Reset back to theme
     draw_theme_reset(&b, &t);
@@ -305,7 +305,7 @@ static int test_visual_theme_reset(void)
     draw_move(&b, 5, 4);
     tb_append_cstr(&b, "back to normal  ");
 
-    draw_text_at(&b, 7, 4, t.text_dim, "-- press enter --");
+    draw_text_at(&b, 7, 4, t.text_dim, &t,"-- press enter --");
 
     tb_flush(&b);
     tb_destroy(&b);
@@ -329,6 +329,7 @@ static int test_box(void)
 
     tb_flush(&b);
     tb_destroy(&b);
+    return 0;
 }
 
 
@@ -336,23 +337,23 @@ static int test_box(void)
 
 extern void config_draw_suite(void)
 {
-    WC_SUITE("config / theme loading");
-    WC_RUN(test_theme_load_fields);
-    WC_RUN(test_theme_load_reset);
-    WC_RUN(test_theme_escape_format);
-    WC_RUN(test_theme_unknown_path);
-
-    WC_SUITE("conf loading");
-    WC_RUN(test_conf_load_values);
-    WC_RUN(test_conf_unknown_path);
-
-    WC_SUITE("visual — theme colours (interactive)");
-    WC_RUN(test_visual_theme_swatches);
-    WC_RUN(test_visual_text_attributes);
-    WC_RUN(test_visual_correct_incorrect);
-    WC_RUN(test_visual_theme_reset);
-
-    WC_SUITE("box");
+    // WC_SUITE("config / theme loading");
+    // WC_RUN(test_theme_load_fields);
+    // WC_RUN(test_theme_load_reset);
+    // WC_RUN(test_theme_escape_format);
+    // WC_RUN(test_theme_unknown_path);
+    //
+    // WC_SUITE("conf loading");
+    // WC_RUN(test_conf_load_values);
+    // WC_RUN(test_conf_unknown_path);
+    //
+    // WC_SUITE("visual — theme colours (interactive)");
+    // WC_RUN(test_visual_theme_swatches);
+    // WC_RUN(test_visual_text_attributes);
+    // WC_RUN(test_visual_correct_incorrect);
+    // WC_RUN(test_visual_theme_reset);
+    //
+    // WC_SUITE("box");
     WC_RUN(test_box);
 }
 

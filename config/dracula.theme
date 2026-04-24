@@ -8,8 +8,8 @@ border      = "#50fa7b"
 cursor      = "#bd93f9"
 
 # no value means it's inferred from rest of the theme
-text_fg     =
-text_bg     =
+text_fg     = "#50fa7b"
+text_bg     = "#282a36"
 text_dim    = "#44475a"
 
 correct     = "#50fa7b"
