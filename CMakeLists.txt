@@ -29,6 +29,8 @@ set (SRC_FILES
     src/wc_imp.c
     src/wordbank.c
     src/buffer.c
+    src/draw.c
+    src/config.c
 )
 
 add_executable(main

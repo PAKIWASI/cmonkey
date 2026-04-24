@@ -32,7 +32,9 @@ typedef enum {
     BORDER_DOUBLE,
 } BORDER_STYLE;
 
-const char BORDER_CHARS[4][8][8] = {
+
+// tl, tr, bl, br, vertical, horizontal
+static const char BORDER_CHARS[4][6][8] = {
     {},
     {"╭", "╮", "╰", "╯", "│", "─"},
     {},
@@ -56,11 +58,15 @@ typedef struct {
 } cmonkey_conf;
 
 
+#define DEFAULT_BORDER_STYLE BORDER_ROUND
+#define DEFAULT_CURSOR_STYLE CURSOR_BAR
+
+
 
 // load theme file and convert values to ansi escape seq
-void theme_load(cmonkey_theme* t, const char* path);
+void theme_load(cmonkey_theme* t, const char* filepath);
 
-void config_load(cmonkey_conf* c, const char* path);
+void config_load(cmonkey_conf* c, const char* filepath);
 
 
 
