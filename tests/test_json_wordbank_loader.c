@@ -1,10 +1,14 @@
+#include "Queue_single.h"
+#include "wc_macros_single.h"
 #include "wc_test.h"
 #include "wordbank.h"
 
+#include <stdio.h>
+
 #define ENG "english.json"
 #define ENG1K "english_1k.json"
-#define ENG5K "english_10k.json"
-#define ENG10K "english_5k.json"
+#define ENG5K "english_5k.json"
+#define ENG10K "english_10k.json"
 #define ENG25K "english_25k.json"
 #define ENG450K "english_450k.json"
 #define ENG_MISSPELLED "english_commonly_misspelled.json"
@@ -51,13 +55,27 @@ static int test_get_random_words(void)
     return 0;
 }
 
+static int test_get_words_in_queue(void)
+{
+    WordBank* wb = wordbank_create(CURR_FILE, NUM_RAND_WORDS);
+    Queue* q = queue_create(NUM_RAND_WORDS, sizeof(u32), NULL);
+
+    wordbank_random_words_in_queue(wb, q);
+
+    printf("%s\t", wordbank_word_at(wb, DEQUEUE(q, u32)));
+
+    queue_destroy(q);
+    wordbank_destroy(wb);
+    return 0;
+}
+
 extern void json_file_suite(void)
 {
     WC_SUITE("JSON File Read Tests");
 
     WC_RUN(test_wb_create);
     WC_RUN(test_get_random_words);
+    WC_RUN(test_get_words_in_queue);
 }
-
 
 

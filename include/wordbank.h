@@ -6,8 +6,13 @@
 
 
 typedef struct {
+    u32 idx;    // offset into arena if all words inline
+    u32 len;    // length of the word
+} Word;
+
+typedef struct {
     Arena*  arena;      // owns all string data
-    genVec* words;      // vec of u32 byte-offsets into arena
+    genVec* words;      // vec of Word type
     u32*    scratch;    // pre-allocated index array for random selection (size == words->size)
     u32*    swapped_j;  // tracks what indices were swapped, to swap them back afterwards
     u32     num_random_words;   // how many words(idx) user will want each call
@@ -28,7 +33,7 @@ void wordbank_switch(WordBank* wb, const char* filename);
 // Get the C string for word at index i (pointer into arena)
 static inline const char* wordbank_word_at(WordBank* wb, u32 i)
 {
-    u32 offset = *(u32*)genVec_get_ptr(wb->words, i);
+    u32 offset = ((Word*)genVec_get_ptr(wb->words, i))->idx;
     return (const char*)(wb->arena->base + offset);
 }
 

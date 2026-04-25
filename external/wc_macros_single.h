@@ -14,6 +14,7 @@
  */
 
 /* ===== wc_macros.h ===== */
+#include "Queue_single.h"
 #ifndef WC_WC_MACROS_H
 #define WC_WC_MACROS_H
 
@@ -299,8 +300,11 @@ Usage:
     ({                           \
         T __tmp;                 \
         dequeue(q, (u8*)&__tmp); \
-        __tmp;                    \
+        __tmp;                   \
     })
+
+#define QUEUE_PEEK(q, T) ((T*)queue_peek_ptr(q))
+
 
 #endif /* WC_WC_MACROS_H */
 

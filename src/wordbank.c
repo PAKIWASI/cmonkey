@@ -171,15 +171,17 @@ WordBank* wordbank_create(const char* filename, u32 num_random_words)
         goto cleanup;
     }
 
-    // Size pass: walk tokens starting at start_offset-th matching word, wrapping around
-    // calculate how much bytes are needed
-    u64 bytes_needed = 0;
-    u32 skipped      = 0;
-    u32 found        = 0;
-    int i            = words_arr + 1;
+    // Size pass: walk tokens starting at start_offset-th matching word, wrapping around.
+    // Once we wrap, skipped is set to start_offset so we no longer skip anything —
+    // the wrapped portion starts at the beginning of the array and all words are valid.
+    u64  bytes_needed = 0;
+    u32  skipped      = 0;
+    u32  found        = 0;
+    int  i            = words_arr + 1;
     while (found < load_count) {
         if (i >= num_tokens) {
-            i = words_arr + 1; // wrap
+            i       = words_arr + 1; // wrap to start of words array
+            skipped = start_offset;  // nothing left to skip on the wrapped portion
         }
         if (toks[i].parent == words_arr && toks[i].type == JSMN_STRING) {
             if (skipped < start_offset) {
@@ -199,22 +201,24 @@ WordBank* wordbank_create(const char* filename, u32 num_random_words)
     }
     
     // size is equal to num of loaded words
-    wb->words = genVec_init(load_count, sizeof(u32), NULL);
+    wb->words = genVec_init(load_count, sizeof(Word), NULL);
 
-    // Copy pass: identical walk
+    // Copy pass: identical walk to size pass
     skipped = 0;
     found   = 0;
     i       = words_arr + 1;
     while (found < load_count) {
         if (i >= num_tokens) {
-            i = words_arr + 1; // wrap
+            i       = words_arr + 1;
+            skipped = start_offset;
         }
         jsmntok_t* t = &toks[i];
         if (t->parent == words_arr && t->type == JSMN_STRING) {
             if (skipped < start_offset) {
                 skipped++;
             } else {
-                int wlen   = t->end - t->start;
+                // len without null term
+                u32 wlen   = (u32)(t->end - t->start);
                 u32 offset = (u32)arena_used(wb->arena);
 
                 char* dest = (char*)arena_alloc(wb->arena, (u64)wlen + 1);
@@ -224,7 +228,7 @@ WordBank* wordbank_create(const char* filename, u32 num_random_words)
                 dest[wlen] = '\0';
 
                 // TODO: push { idx, wlen } ?
-                genVec_push(wb->words, (u8*)&offset);
+                genVec_push(wb->words, (u8*)&((Word){offset, wlen}));
                 found++;
             }
         }
@@ -238,7 +242,7 @@ WordBank* wordbank_create(const char* filename, u32 num_random_words)
         goto cleanup;
     }
     for (u32 k = 0; k < load_count; k++) {
-        wb->scratch[k] = k;
+        wb->scratch[k] = k;     // points into genvec
     }
 
                             // DEBUG: NUM_RAND_WORDS
@@ -331,7 +335,7 @@ void wordbank_random_words_in_queue(WordBank* wb, Queue* q)
         wb->scratch[i]  = wb->scratch[j];
         wb->scratch[j]  = tmp;
 
-        enqueue(q, cast(wb->scratch[i]));
+        enqueue(q, (u8*)&wb->scratch[i]);
     }
 
     // Undo swaps in reverse — restores scratch to identity without full reset
@@ -342,5 +346,3 @@ void wordbank_random_words_in_queue(WordBank* wb, Queue* q)
         wb->scratch[j] = tmp;
     }
 }
-
-
