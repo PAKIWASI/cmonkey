@@ -33,14 +33,14 @@
 #define CURSOR_HIDE   ESC "?25l"
 #define CURSOR_SHOW   ESC "?25h"
 
-// clear screen + move home
-#define CLEAR_SCREEN  ESC "2J" ESC "H"
-/*
-It erases all content in the terminal window
+/* 
+clear screen + move home
+erases all content in the terminal window
 The newly revealed area is filled with the currently active background colour
-    not necessarily your theme’s colour, but whatever attribute is in effect
+    not necessarily theme’s colour, but whatever attribute is in effect
     at the moment the escape is processed
 */
+#define CLEAR_SCREEN  ESC "2J" ESC "H"
 
 
 // box type with position and dimentions
@@ -90,6 +90,7 @@ static inline void draw_strike_off(term_buf* b)   { tb_append_cstr(b, STRIKE_OFF
 static inline void draw_fg(term_buf* b, const char* escape) { tb_append_cstr(b, escape); }
 static inline void draw_bg(term_buf* b, const char* escape) { tb_append_cstr(b, escape); }
 
+// TODO: inner for loop is a waste
 static inline void fill_box_bg(term_buf* b, Box box, const char* bg)
 {
     draw_bg(b, bg);
@@ -124,9 +125,6 @@ void draw_text_with_color(term_buf* b, u32 row, u32 col, const char* fg,
  * resets aftewards with theme
 */
 void draw_box(term_buf* b, Box box, cmonkey_theme* t, cmonkey_conf* c);
-
-// TODO: define box struct ?
-
 
 /*
     knows the box's boundry so warps words to the next line

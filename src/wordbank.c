@@ -223,6 +223,7 @@ WordBank* wordbank_create(const char* filename, u32 num_random_words)
                 memcpy(dest, json_buf + t->start, (size_t)wlen);
                 dest[wlen] = '\0';
 
+                // TODO: push { idx, wlen } ?
                 genVec_push(wb->words, (u8*)&offset);
                 found++;
             }
