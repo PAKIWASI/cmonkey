@@ -5,7 +5,7 @@
 
 
 
-void draw_text_at(term_buf* b, u32 row, u32 col, const cmonkey_theme* t, const char* text)
+void draw_text(term_buf* b, u32 row, u32 col, const cmonkey_theme* t, const char* text)
 {
     // move cursor to row,col
     draw_move(b, row, col);
@@ -24,9 +24,31 @@ void draw_text_at(term_buf* b, u32 row, u32 col, const cmonkey_theme* t, const c
 }
 
 
+void draw_text_with_color(term_buf* b, u32 row, u32 col, const char* fg,
+                  const cmonkey_theme* t, const char* text)
+{
+    // move cursor to row,col
+    draw_move(b, row, col);
+
+    // draw text bg
+    draw_bg(b, t->text_bg);
+
+    // override with explicit fg
+    if (fg && fg[0]) { draw_fg(b, fg); }
+    // or draw normal
+    else { draw_fg(b, t->text_fg); }
+
+    // draw the text
+    tb_append_cstr(b, text);
+
+    // reset to theme
+    draw_theme_reset(b, t);
+}
 
 
-void draw_box_at(term_buf* b, u32 row, u32 col, u32 h, u32 w, cmonkey_theme* t, cmonkey_conf* c)
+
+
+void draw_box(term_buf* b, u32 row, u32 col, u32 h, u32 w, cmonkey_theme* t, cmonkey_conf* c)
 {
     // move
     draw_move(b, row, col);
@@ -66,7 +88,7 @@ void draw_box_at(term_buf* b, u32 row, u32 col, u32 h, u32 w, cmonkey_theme* t, 
     }
     tb_append_cstr(b, bc[3]); // bottom-right
 
-    // reset
+    // reset theme only, doesnot clear entire screen with theme
     draw_theme_reset(b, t);
 }
 

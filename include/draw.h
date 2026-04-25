@@ -35,6 +35,12 @@
 
 // clear screen + move home
 #define CLEAR_SCREEN  ESC "2J" ESC "H"
+/*
+It erases all content in the terminal window
+The newly revealed area is filled with the currently active background colour
+    not necessarily your theme’s colour, but whatever attribute is in effect
+    at the moment the escape is processed
+*/
 
 
 static inline void draw_move(term_buf* b, u32 row, u32 col)
@@ -57,8 +63,8 @@ static inline void draw_theme_reset(term_buf* b, const cmonkey_theme* t)
 // clear screen and re-apply theme colours
 static inline void draw_clear(term_buf* b, const cmonkey_theme* t)
 {
-    tb_append_cstr(b, CLEAR_SCREEN);
-    tb_append_cstr(b, t->reset);
+    tb_append_cstr(b, t->reset);        // set theme
+    tb_append_cstr(b, CLEAR_SCREEN);    // clear entire screen with theme
 }
 
 // text attributes
@@ -76,6 +82,17 @@ static inline void draw_strike_off(term_buf* b)   { tb_append_cstr(b, STRIKE_OFF
 // theme colours: pass the pre-built escape string from cmonkey_theme
 static inline void draw_fg(term_buf* b, const char* escape) { tb_append_cstr(b, escape); }
 static inline void draw_bg(term_buf* b, const char* escape) { tb_append_cstr(b, escape); }
+
+static inline void fill_box_bg(term_buf* b, u32 row, u32 col, u32 h, u32 w, const char* bg)
+{
+    draw_bg(b, bg);
+    for (u32 i = 0; i < h; i++) {
+        draw_move(b, row + i, col);
+        for (u32 j = 0; j < w; j++) {
+            tb_append_n(b, " ", 1);
+        }
+    }
+}
 
 /*
  * draw_color_swatch — emit a filled rectangle of `ch` in the given fg/bg.
@@ -107,11 +124,13 @@ static inline void draw_color_swatch(term_buf* b,
  * move then write a string with optional fg colour
  * Resets afterwards with theme
  */
-void draw_text_at(term_buf* b, u32 row, u32 col,
+void draw_text(term_buf* b, u32 row, u32 col,
                   const cmonkey_theme* t, const char* text);
-// void draw_text_at(term_buf* b, u32 row, u32 col, const char* fg,
-//                   const cmonkey_theme* t, const char* text);
-// TODO: i dont think we need to take fg, we already have text fg/bg in theme
+/*
+ * draw text with an explicit color override
+*/
+void draw_text_with_color(term_buf* b, u32 row, u32 col, const char* fg,
+                  const cmonkey_theme* t, const char* text);
 
 
 /*
@@ -120,7 +139,7 @@ void draw_text_at(term_buf* b, u32 row, u32 col,
  * otherwise use default
  * resets aftewards with theme
 */
-void draw_box_at(term_buf* b, u32 row, u32 col, u32 h, u32 w,
+void draw_box(term_buf* b, u32 row, u32 col, u32 h, u32 w,
                  cmonkey_theme* t, cmonkey_conf* c);
 
 // TODO: define box struct ?

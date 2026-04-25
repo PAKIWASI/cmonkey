@@ -13,3 +13,4 @@
 8. when we do draw_fg/bg, we are applying to the next things we draw. when we do draw bg and then
     draw a box, only the box borders get the bg. for text, we need to call draw fg/bg within the 
     text drawing func then revert it back. global fg, bg should come at start
+9. if we want to fill a box with a bg, we need to explictily fill each cell in the box
