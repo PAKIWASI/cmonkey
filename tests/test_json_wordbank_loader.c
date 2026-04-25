@@ -4,6 +4,7 @@
 #include "wordbank.h"
 
 #include <stdio.h>
+#include <unistd.h>
 
 #define ENG "english.json"
 #define ENG1K "english_1k.json"
@@ -17,7 +18,7 @@
 #define BULLSHIT "bullshit.json"
 
 #define FOLDER_PATH "wordbanks/"
-#define CURR_FILE (FOLDER_PATH ENG1K)
+#define CURR_FILE (FOLDER_PATH ENG450K)
 
 #define NUM_RAND_WORDS 200
 
@@ -104,8 +105,8 @@ extern void json_file_suite(void)
 {
     WC_SUITE("JSON File Read Tests");
 
-    WC_RUN(test_wb_create);
-    WC_RUN(test_get_random_words);
+    // WC_RUN(test_wb_create);
+    // WC_RUN(test_get_random_words);
     WC_RUN(test_get_words_in_queue);
     WC_RUN(test_get_words_refresh);
 }

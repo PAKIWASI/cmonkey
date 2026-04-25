@@ -14,7 +14,7 @@ typedef struct {
     Arena*  arena;      // owns all string data
     genVec* words;      // vec of Word type
     u32*    scratch;    // pre-allocated index array for random selection (size == words->size)
-    u32*    swapped_j;  // tracks what indices were swapped, to swap them back afterwards
+    u32     cursor;     // next index to serve from scratch
     u32     num_random_words;   // how many words(idx) user will want each call
 } WordBank;
 
