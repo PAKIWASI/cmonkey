@@ -33,8 +33,7 @@ void wordbank_switch(WordBank* wb, const char* filename);
 // Get the C string for word at index i (pointer into arena)
 static inline const char* wordbank_word_at(WordBank* wb, u32 i)
 {
-    u32 offset = ((Word*)genVec_get_ptr(wb->words, i))->idx;
-    return (const char*)(wb->arena->base + offset);
+    return (const char*)(wb->arena->base + i);
 }
 
 // Partial Fisher-Yates: O(N) time, my modified verion: O(buff_size)

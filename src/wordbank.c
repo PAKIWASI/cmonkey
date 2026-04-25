@@ -227,7 +227,6 @@ WordBank* wordbank_create(const char* filename, u32 num_random_words)
                 memcpy(dest, json_buf + t->start, (size_t)wlen);
                 dest[wlen] = '\0';
 
-                // TODO: push { idx, wlen } ?
                 genVec_push(wb->words, (u8*)&((Word){offset, wlen}));
                 found++;
             }
@@ -245,7 +244,7 @@ WordBank* wordbank_create(const char* filename, u32 num_random_words)
         wb->scratch[k] = k;     // points into genvec
     }
 
-                            // DEBUG: NUM_RAND_WORDS
+    // number of words user will want per call
     if (num_random_words == 0) {
         WARN("num_random_words can't be 0");
         goto cleanup;
@@ -256,7 +255,6 @@ WordBank* wordbank_create(const char* filename, u32 num_random_words)
         WARN("OOM scratch");
         goto cleanup;
     }
-
 
     free(toks);
     free(json_buf);
@@ -335,6 +333,7 @@ void wordbank_random_words_in_queue(WordBank* wb, Queue* q)
         wb->scratch[i]  = wb->scratch[j];
         wb->scratch[j]  = tmp;
 
+        // queue stores indexes into genvec
         enqueue(q, (u8*)&wb->scratch[i]);
     }
 
@@ -346,3 +345,6 @@ void wordbank_random_words_in_queue(WordBank* wb, Queue* q)
         wb->scratch[j] = tmp;
     }
 }
+
+
+

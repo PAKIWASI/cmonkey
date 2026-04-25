@@ -33,7 +33,7 @@
 #define CURSOR_HIDE   ESC "?25l"
 #define CURSOR_SHOW   ESC "?25h"
 
-/* 
+/*
 clear screen + move home
 erases all content in the terminal window
 The newly revealed area is filled with the currently active background colour
