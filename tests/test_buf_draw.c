@@ -134,63 +134,6 @@ static int test_conf_unknown_path(void)
 
 // ── visual / draw tests ───────────────────────────────────────────────────────
 
-/*
- * visual_theme_swatches — render one labelled colour swatch per theme field.
- * Each swatch is a row of '█' printed in the theme colour against the main_bg,
- * with the field name in plain text to the right.
- *
- * Expected: you see 7 coloured bars with matching labels.
- */
-static int test_visual_theme_swatches(void)
-{
-    cmonkey_theme t = {0};
-    theme_load(&t, THEME_PATH);
-
-    term_buf b;
-    tb_create(&b, 40, 80);
-
-    // Clear + apply theme base
-    draw_clear(&b, &t);
-
-    struct { const char* label; const char* fg; const char* bg; } swatches[] = {
-        { "main_fg",   t.main_fg,   t.main_bg  },
-        { "main_bg",   t.main_fg,   t.main_bg  },  // show bg as a bg swatch
-        { "border",    t.border,    t.main_bg  },
-        { "cursor",    t.cursor,    t.main_bg  },
-        { "text_dim",  t.text_dim,  t.main_bg  },
-        { "correct",   t.correct,   t.main_bg  },
-        { "incorrect", t.incorrect, t.main_bg  },
-    };
-
-    u32 num = sizeof(swatches) / sizeof(swatches[0]);
-    for (u32 i = 0; i < num; i++) {
-        u32 row = 3 + (i * 2);
-
-        // Coloured bar
-        draw_color_swatch(&b, row, 4, 12,
-                          swatches[i].fg, swatches[i].bg, (char)0xe2); // '█' multi-byte; use ' ' fallback
-        // For ASCII-safe terminals, just fill with spaces on the bg:
-        draw_move(&b, row, 4);
-        if (swatches[i].fg[0]) { draw_fg(&b, swatches[i].fg); }
-        if (swatches[i].bg[0]) { draw_bg(&b, swatches[i].bg); }
-        tb_append_cstr(&b, "            "); // 12 spaces
-        draw_reset(&b);
-
-        // Label in main_fg
-        draw_text_with_color(&b, row, 18, t.main_fg, &t, swatches[i].label);
-    }
-
-    // Footer
-    draw_text_with_color(&b, 3 + (num * 2) + 1, 4, t.text_dim, &t,
-                 "-- press enter --");
-
-    tb_flush(&b);
-    tb_destroy(&b);
-
-    // Wait for tester to observe the output
-    getchar();
-    return 0;
-}
 
 /*
  * visual_text_attributes — render the same word in every text attribute
@@ -378,7 +321,6 @@ extern void config_draw_suite(void)
     WC_RUN(test_conf_unknown_path);
 
     WC_SUITE("visual — theme colours (interactive)");
-    WC_RUN(test_visual_theme_swatches);
     WC_RUN(test_visual_text_attributes);
     WC_RUN(test_visual_correct_incorrect);
     WC_RUN(test_visual_theme_reset);

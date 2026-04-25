@@ -94,30 +94,6 @@ static inline void fill_box_bg(term_buf* b, u32 row, u32 col, u32 h, u32 w, cons
     }
 }
 
-/*
- * draw_color_swatch — emit a filled rectangle of `ch` in the given fg/bg.
- * Used by tests to visually verify that a theme colour round-tripped correctly.
- *
- *   row, col  : top-left position (1-based)
- *   w         : width in characters
- *   fg, bg    : escape strings (may be "" to skip)
- *   ch        : fill character  (e.g. ' ', '█', '▓')
- */
-static inline void draw_color_swatch(term_buf* b,
-                                     u32 row, u32 col, u32 w,
-                                     const char* fg, const char* bg,
-                                     char ch)
-{
-    draw_move(b, row, col);
-    if (fg && fg[0]) { draw_fg(b, fg); }
-    if (bg && bg[0]) { draw_bg(b, bg); }
-    for (u32 i = 0; i < w; i++) {
-        tb_append_n(b, &ch, 1);
-    }
-    tb_append_cstr(b, RESET);
-}
-
-
 // COMPONENTS - Non Trivial elements like boxes, text etc
 
 /*
