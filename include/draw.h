@@ -105,21 +105,27 @@ static inline void draw_color_swatch(term_buf* b,
 
 /*
  * move then write a string with optional fg colour
- * Resets afterwards
- * TODO: should we reset with theme or simple reset?
- *
+ * Resets afterwards with theme
  */
-void draw_text_at(term_buf* b, u32 row, u32 col,
-                  const char* fg, const cmonkey_theme* t, const char* text);
+void draw_text_at(term_buf* b, u32 row, u32 col, const char* fg,
+                  const cmonkey_theme* t, const char* text);
+// TODO: i dont think we need to take fg, we already have text fg/bg in theme
+
+/*
+    knows the box's boundry so warps words to the next line
+*/
+void draw_words_in_box(term_buf* b, u32 row, u32 col, u32 h, u32 w,
+                       const char** words, u32 num_words, const cmonkey_theme* t);
 
 /*
  * Draw a box at row, col of size h, w
  * takes optional theme and border stlye
  * otherwise use default
- * resets aftewards
+ * resets aftewards with theme
 */
-void draw_box_at(term_buf* b, u32 row, u32 col, u32 h, u32 w, 
+void draw_box_at(term_buf* b, u32 row, u32 col, u32 h, u32 w,
                  cmonkey_theme* t, cmonkey_conf* c);
 
+// TODO: define box struct ?
 
 #endif // CMONKEY_DRAW
