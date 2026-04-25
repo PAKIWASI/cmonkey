@@ -3,35 +3,35 @@
 #include "config.h"
 
 
-#define THEME_RESET(b, t)       \
-    if (t) {                    \
-        draw_theme_reset(b, t); \
-    } else {                    \
-        draw_reset(b);          \
-    }
 
 
-void draw_text_at(term_buf* b, u32 row, u32 col, const char* fg, const cmonkey_theme* t, const char* text)
+void draw_text_at(term_buf* b, u32 row, u32 col, const cmonkey_theme* t, const char* text)
 {
+    // move cursor to row,col
     draw_move(b, row, col);
 
-    if (fg && fg[0]) {
-        draw_fg(b, fg);
-    }
+    // draw text bg
+    draw_bg(b, t->text_bg);
 
+    // draw text fb
+    draw_fg(b, t->text_fg);
+
+    // draw the text
     tb_append_cstr(b, text);
 
-    THEME_RESET(b, t);
+    // reset to theme
+    draw_theme_reset(b, t);
 }
+
+
 
 
 void draw_box_at(term_buf* b, u32 row, u32 col, u32 h, u32 w, cmonkey_theme* t, cmonkey_conf* c)
 {
-    // move and theme
+    // move
     draw_move(b, row, col);
-    if (t && t->border[0]) {
-        draw_fg(b, t->border);
-    }
+
+    draw_fg(b, t->border);
 
     // border style
     BORDER_STYLE bs = DEFAULT_BORDER_STYLE;
@@ -67,7 +67,21 @@ void draw_box_at(term_buf* b, u32 row, u32 col, u32 h, u32 w, cmonkey_theme* t, 
     tb_append_cstr(b, bc[3]); // bottom-right
 
     // reset
-    THEME_RESET(b, t);
+    draw_theme_reset(b, t);
+}
+
+void draw_words_in_box(term_buf* b, u32 row, u32 col, u32 h, u32 w,
+                       const char** words, u32 num_words, const cmonkey_theme* t)
+{
+    draw_move(b, row, col);
+    draw_bg(b, t->text_bg);
+    draw_fg(b, t->text_fg);
+
+    // calculate total length, adding each word's len
+    // then see if we need to go to the next line
+    for (u32 i = 0; i < num_words; i++) {
+
+    }
 }
 
 
