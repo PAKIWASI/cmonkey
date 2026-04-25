@@ -1,0 +1,10 @@
+# cmonkey theme — One Dark
+main_fg     = "#abb2bf"
+main_bg     = "#282c34"
+border      = "#98c379"
+cursor      = "#c678dd"
+text_fg     = "#61afef"
+text_bg     = "#282c34"
+text_dim    = "#5c6370"
+correct     = "#98c379"
+incorrect   = "#e06c75"

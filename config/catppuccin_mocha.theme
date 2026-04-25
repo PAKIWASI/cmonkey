@@ -1,0 +1,10 @@
+# cmonkey theme — Catppuccin Mocha
+main_fg     = "#cdd6f4"
+main_bg     = "#1e1e2e"
+border      = "#a6e3a1"
+cursor      = "#cba6f7"
+text_fg     = "#cba6f7"
+text_bg     = "#1e1e2e"
+text_dim    = "#585b70"
+correct     = "#a6e3a1"
+incorrect   = "#f38ba8"

@@ -1,0 +1,10 @@
+# cmonkey theme — Nord
+main_fg     = "#d8dee9"
+main_bg     = "#2e3440"
+border      = "#a3be8c"
+cursor      = "#b48ead"
+text_fg     = "#b48ead"
+text_bg     = "#2e3440"
+text_dim    = "#4c566a"
+correct     = "#a3be8c"
+incorrect   = "#bf616a"

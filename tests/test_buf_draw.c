@@ -8,7 +8,7 @@
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-#define THEME_PATH  "config/dracula.theme"
+#define THEME_PATH  "config/one_dark.theme"
 #define CONF_PATH   "config/cmonkey.conf"
 
 // Pause briefly between visual tests so the tester can read the output
@@ -351,9 +351,7 @@ static int test_box_text(void)
 
     draw_clear(&b, &t);
 
-    fill_box_bg(&b, 2, 2, 68, 68, t.incorrect);
     draw_box(&b, 1, 1, 70, 70, &t, &c);
-    fill_box_bg(&b, 2, 2, 68, 68, t.reset);
 
     draw_text_with_color(&b, 2, 2, t.text_fg, &t,
     "hello my name is wasi ullah satti. cmonkey is coming along nicely!");

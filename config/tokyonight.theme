@@ -1,0 +1,10 @@
+# cmonkey theme — Tokyo Night
+main_fg     = "#a9b1d6"
+main_bg     = "#1a1b26"
+border      = "#9ece6a"
+cursor      = "#bb9af7"
+text_fg     = "#bb9af7"
+text_bg     = "#1a1b26"
+text_dim    = "#565f89"
+correct     = "#9ece6a"
+incorrect   = "#f7768e"

@@ -1,0 +1,10 @@
+# cmonkey theme — Solarized Dark
+main_fg     = "#839496"
+main_bg     = "#002b36"
+border      = "#859900"
+cursor      = "#d33682"
+text_fg     = "#268bd2"
+text_bg     = "#002b36"
+text_dim    = "#586e75"
+correct     = "#859900"
+incorrect   = "#dc322f"

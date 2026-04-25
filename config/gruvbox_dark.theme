@@ -1,0 +1,10 @@
+# cmonkey theme — Gruvbox Dark
+main_fg     = "#ebdbb2"
+main_bg     = "#282828"
+border      = "#fabd2f"
+cursor      = "#83a598"
+text_fg     = "#83a598"
+text_bg     = "#282828"
+text_dim    = "#928374"
+correct     = "#b8bb26"
+incorrect   = "#fb4934"
