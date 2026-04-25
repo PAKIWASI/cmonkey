@@ -46,12 +46,10 @@ void draw_text_with_color(term_buf* b, u32 row, u32 col, const char* fg,
 }
 
 
-
-
-void draw_box(term_buf* b, u32 row, u32 col, u32 h, u32 w, cmonkey_theme* t, cmonkey_conf* c)
+void draw_box(term_buf* b, Box box, cmonkey_theme* t, cmonkey_conf* c)
 {
     // move
-    draw_move(b, row, col);
+    draw_move(b, box.r, box.c);
 
     draw_fg(b, t->border);
 
@@ -66,24 +64,24 @@ void draw_box(term_buf* b, u32 row, u32 col, u32 h, u32 w, cmonkey_theme* t, cmo
     // top left
     tb_append_cstr(b, bc[0]);
     // top horizontal
-    for (u32 i = 0; i < w - 2; i++) {
+    for (u32 i = 0; i < box.w - 2; i++) {
         tb_append_cstr(b, bc[5]);
     }
     // top right
     tb_append_cstr(b, bc[1]);
 
     // Vertical sides
-    for (u32 i = 0; i < h - 2; i++) {
-        draw_move(b, row + 1 + i, col); // left side
+    for (u32 i = 0; i < box.h - 2; i++) {
+        draw_move(b, box.r + 1 + i, box.c); // left side
         tb_append_cstr(b, bc[4]);
-        draw_move(b, row + 1 + i, col + w - 1); // right side
+        draw_move(b, box.r + 1 + i, box.c + box.w - 1); // right side
         tb_append_cstr(b, bc[4]);
     }
 
     // Bottom border
-    draw_move(b, row + h - 1, col);
+    draw_move(b, box.r + box.h - 1, box.c);
     tb_append_cstr(b, bc[2]); // bottom-left
-    for (u32 i = 0; i < w - 2; i++) {
+    for (u32 i = 0; i < box.w - 2; i++) {
         tb_append_cstr(b, bc[5]);
     }
     tb_append_cstr(b, bc[3]); // bottom-right
@@ -92,10 +90,10 @@ void draw_box(term_buf* b, u32 row, u32 col, u32 h, u32 w, cmonkey_theme* t, cmo
     draw_theme_reset(b, t);
 }
 
-void draw_words_in_box(term_buf* b, u32 row, u32 col, u32 h, u32 w,
-                       const char** words, u32 num_words, const cmonkey_theme* t)
+void draw_words_in_box(term_buf* b, Box box, const char** words,
+                       u32 num_words, const cmonkey_theme* t)
 {
-    draw_move(b, row, col);
+    draw_move(b, box.r, box.c);
     draw_bg(b, t->text_bg);
     draw_fg(b, t->text_fg);
 

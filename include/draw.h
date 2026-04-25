@@ -43,6 +43,13 @@ The newly revealed area is filled with the currently active background colour
 */
 
 
+// box type with position and dimentions
+// row, col, height, widht
+typedef struct {
+    u32 r, c, h, w;
+} Box;
+
+
 static inline void draw_move(term_buf* b, u32 row, u32 col)
 {
     tb_append_v(b, ESC "%d;%dH", row, col);
@@ -83,16 +90,17 @@ static inline void draw_strike_off(term_buf* b)   { tb_append_cstr(b, STRIKE_OFF
 static inline void draw_fg(term_buf* b, const char* escape) { tb_append_cstr(b, escape); }
 static inline void draw_bg(term_buf* b, const char* escape) { tb_append_cstr(b, escape); }
 
-static inline void fill_box_bg(term_buf* b, u32 row, u32 col, u32 h, u32 w, const char* bg)
+static inline void fill_box_bg(term_buf* b, Box box, const char* bg)
 {
     draw_bg(b, bg);
-    for (u32 i = 0; i < h; i++) {
-        draw_move(b, row + i, col);
-        for (u32 j = 0; j < w; j++) {
+    for (u32 i = 0; i < box.h; i++) {
+        draw_move(b, box.r + i, box.c);
+        for (u32 j = 0; j < box.w; j++) {
             tb_append_n(b, " ", 1);
         }
     }
 }
+
 
 // COMPONENTS - Non Trivial elements like boxes, text etc
 
@@ -115,8 +123,7 @@ void draw_text_with_color(term_buf* b, u32 row, u32 col, const char* fg,
  * otherwise use default
  * resets aftewards with theme
 */
-void draw_box(term_buf* b, u32 row, u32 col, u32 h, u32 w,
-                 cmonkey_theme* t, cmonkey_conf* c);
+void draw_box(term_buf* b, Box box, cmonkey_theme* t, cmonkey_conf* c);
 
 // TODO: define box struct ?
 
@@ -124,8 +131,8 @@ void draw_box(term_buf* b, u32 row, u32 col, u32 h, u32 w,
 /*
     knows the box's boundry so warps words to the next line
 */
-void draw_words_in_box(term_buf* b, u32 row, u32 col, u32 h, u32 w,
-                       const char** words, u32 num_words, const cmonkey_theme* t);
+void draw_words_in_box(term_buf* b, Box box, const char** words,
+                       u32 num_words, const cmonkey_theme* t);
 
 
 #endif // CMONKEY_DRAW

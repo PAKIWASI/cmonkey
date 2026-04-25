@@ -34,11 +34,14 @@ static inline const char* wordbank_word_at(WordBank* wb, u32 i)
 
 // Partial Fisher-Yates: O(N) time, my modified verion: O(buff_size)
 void wordbank_random_words(WordBank* wb, u32* buff, u32 buff_size);
-// TODO:say i load 60 words, then for the same test, I load 60 more, what are the chances
-// that words will be repeated ? wrt total no of words
-// maybe we should load 200 words ie buff_size == 200
 
 
+/*
+    we push 'num_random_words' elm indexes to back of queue
+    queue is a subset of words genvec, words should be accessed by
+    calling wordbank_word_at() with the index from front of queue
+    if queue is exausted, we load more at the back
+*/
 void wordbank_random_words_in_queue(WordBank* wb, Queue* q);
 
 

@@ -331,7 +331,6 @@ void wordbank_random_words_in_queue(WordBank* wb, Queue* q)
         wb->scratch[j]  = tmp;
 
         enqueue(q, cast(wb->scratch[i]));
-        // ENQUEUE(q, wb->scratch[i]);
     }
 
     // Undo swaps in reverse — restores scratch to identity without full reset
