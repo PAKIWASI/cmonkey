@@ -6,16 +6,16 @@
 
 
 typedef struct {
-    u32 idx;    // offset into arena if all words inline
+    u32 idx;    // offset into arena of all words inline
     u32 len;    // length of the word
 } Word;
 
 typedef struct {
     Arena*  arena;      // owns all string data
-    genVec* words;      // vec of Word type
-    u32*    scratch;    // pre-allocated index array for random selection (size == words->size)
-    u32     cursor;     // next index to serve from scratch
+    genVec* words;      // vec of Word type. the index into vec goes in the queue
+    u32     cursor;     // next index to serve from words vec
     u32     num_random_words;   // how many words(idx) user will want each call
+    // we give the user indexes into words vec at back of queue
 } WordBank;
 
 // TODO: 
@@ -35,10 +35,6 @@ static inline const char* wordbank_word_at(WordBank* wb, u32 i)
 {
     return (const char*)(wb->arena->base + i);
 }
-
-// Partial Fisher-Yates: O(N) time, my modified verion: O(buff_size)
-void wordbank_random_words(WordBank* wb, u32* buff, u32 buff_size);
-
 
 /*
     we push 'num_random_words' elm indexes to back of queue

@@ -234,23 +234,6 @@ WordBank* wordbank_create(const char* filename, u32 num_random_words)
         i++;
     }
 
-    // Replace the scratch identity-fill + swapped_j alloc with:
-    wb->scratch = malloc(load_count * sizeof(u32));
-    if (!wb->scratch) {
-        WARN("OOM scratch");
-        goto cleanup;
-    }
-    for (u32 k = 0; k < load_count; k++) { 
-        wb->scratch[k] = k;
-    }
-
-    // full Fisher-Yates shuffle once at creation
-    for (u32 k = load_count - 1; k > 0; k--) {
-        u32 j = pcg32_rand_bounded(k + 1);
-        u32 tmp = wb->scratch[k];
-        wb->scratch[k] = wb->scratch[j];
-        wb->scratch[j] = tmp;
-    }
     wb->cursor = 0;
     wb->num_random_words = num_random_words;
 
@@ -266,7 +249,6 @@ cleanup:
     if (wb) {
         if (wb->arena) { arena_release(wb->arena); }
         if (wb->words) { genVec_destroy(wb->words); }
-        if (wb->scratch) { free(wb->scratch); }
         free(wb);
     }
     return NULL;
@@ -282,58 +264,15 @@ void wordbank_destroy(WordBank* wb)
 
     arena_release(wb->arena);
     genVec_destroy(wb->words);
-    free(wb->scratch);
     free(wb);
 }
 
 
-void wordbank_random_words(WordBank* wb, u32* buff, u32 buff_size)
-{
-    CHECK_WARN_RET(!wb, , "wordbank is null");
-    CHECK_WARN_RET(!buff,  , "queue is null");
-    CHECK_WARN_RET(buff_size != wb->num_random_words, , "");
-
-    u32 total = (u32)wb->words->size;
-
-    for (u32 i = 0; i < buff_size; i++) {
-        // reshuffle and wrap cursor when exhausted
-        if (wb->cursor >= total) {
-            for (u32 k = total - 1; k > 0; k--) {
-                u32 j = pcg32_rand_bounded(k + 1);
-                u32 tmp = wb->scratch[k];
-                wb->scratch[k] = wb->scratch[j];
-                wb->scratch[j] = tmp;
-            }
-            wb->cursor = 0;
-        }
-        buff[i] = wb->scratch[wb->cursor++];
-    }
-}
-
-// void wordbank_random_words_in_queue(WordBank* wb, Queue* q)
-// {
-//     CHECK_WARN_RET(!wb, , "wordbank is null");
-//     CHECK_WARN_RET(!q,  , "queue is null");
-//
-//     u32 total = (u32)wb->words->size;
-//     u32 num   = wb->num_random_words;
-//
-//     for (u32 i = 0; i < num; i++) {
-//         // reshuffle and wrap cursor when exhausted
-//         if (wb->cursor >= total) {
-//             for (u32 k = total - 1; k > 0; k--) {
-//                 u32 j = pcg32_rand_bounded(k + 1);
-//                 u32 tmp = wb->scratch[k];
-//                 wb->scratch[k] = wb->scratch[j];
-//                 wb->scratch[j] = tmp;
-//             }
-//             wb->cursor = 0;
-//         }
-//         enqueue(q, (u8*)&wb->scratch[wb->cursor++]);
-//     }
-// }
-
-
+/*
+    O(num) — iterating num times, doing a swap and an enqueue each iteration
+    The reshuffle branch is O(total) but only fires when cursor >= total,
+    which happens once every total/num calls Amortized : O(num)
+*/
 void wordbank_random_words_in_queue(WordBank* wb, Queue* q)
 {
     CHECK_WARN_RET(!wb, , "wordbank is null");
@@ -342,17 +281,19 @@ void wordbank_random_words_in_queue(WordBank* wb, Queue* q)
     u32 total = (u32)wb->words->size;
     u32 num   = wb->num_random_words;
 
-    if (wb->cursor + num > total) {
-        wb->cursor = 0;  // wrap — optionally reshuffle tail here
+    for (u32 i = 0; i < num; i++) {
+        if (wb->cursor >= total) {
+            for (u32 k = total - 1; k > 0; k--) {
+                u32 j = pcg32_rand_bounded(k + 1);
+                Word tmp = *(Word*)genVec_get_ptr(wb->words, k);
+                *(Word*)genVec_get_ptr(wb->words, k) = *(Word*)genVec_get_ptr(wb->words, j);
+                *(Word*)genVec_get_ptr(wb->words, j) = tmp;
+            }
+            wb->cursor = 0;
+        }
+        enqueue(q, genVec_get_ptr(wb->words, wb->cursor++));
     }
-
-    for (u32 i = wb->cursor; i < wb->cursor + num; i++) {
-        u32 j = i + pcg32_rand_bounded(total - i);
-        u32 tmp        = wb->scratch[i];
-        wb->scratch[i] = wb->scratch[j];
-        wb->scratch[j] = tmp;
-        enqueue(q, (u8*)&wb->scratch[i]);
-    }
-
-    wb->cursor += num;
 }
+
+
+
