@@ -5,6 +5,7 @@
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 
@@ -102,13 +103,13 @@ static bool parse_kv(char* line, int line_num, const char* ctx,
 
 // theme
 
-void theme_load(cmonkey_theme* t, const char* filepath)
+cmonkey_theme* theme_load(const char* filepath)
 {
     FILE* fp = fopen(filepath, "r");
-    if (!fp) {
-        WARN("Cannot open theme '%s', using defaults\n", filepath);
-        return;
-    }
+    CHECK_WARN_RET(!fp, NULL, "Cannot open theme '%s', using defaults\n", filepath);
+
+    cmonkey_theme* t = malloc(sizeof(cmonkey_theme));
+    CHECK_FATAL(!t, "theme malloc failed");
 
     char line[256];
     int  line_num = 0;
@@ -134,6 +135,8 @@ void theme_load(cmonkey_theme* t, const char* filepath)
     // Build the global reset string
     snprintf(t->reset, sizeof(t->reset), "\033[0m%s%s",
              t->main_fg, t->main_bg);
+
+    return t;
 }
 
 
@@ -194,13 +197,13 @@ static void hex_to_escape(const char* hex, bool is_fg,
 
 // conf
 
-void config_load(cmonkey_conf* c, const char* filepath)
+cmonkey_conf* config_load(const char* filepath)
 {
     FILE* fp = fopen(filepath, "r");
-    if (!fp) {
-        WARN("Cannot open config '%s', using defaults\n", filepath);
-        return;
-    }
+    CHECK_WARN_RET(!fp, NULL, "Cannot open config '%s', using defaults\n", filepath);
+
+    cmonkey_conf* c = malloc(sizeof(cmonkey_conf));
+    CHECK_FATAL(!c, "conf malloc failed");
 
     char line[256];
     int  line_num = 0;
@@ -233,6 +236,16 @@ void config_load(cmonkey_conf* c, const char* filepath)
     }
 
     fclose(fp);
+
+    return c;
 }
 
+void theme_unload(cmonkey_theme* t)
+{
+    free(t);
+}
 
+void config_unload(cmonkey_conf* c)
+{
+    free(c);
+}

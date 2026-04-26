@@ -10,8 +10,10 @@
 #define NEXT_SLOT(b) (b->data + b->len)
 
 
-void tb_create(term_buf* b, u32 rows, u32 cols)
+term_buf* tb_create(u32 rows, u32 cols)
 {
+    term_buf* b = malloc(sizeof(term_buf));
+    CHECK_FATAL(!b, "buf malloc failed");
     /* Allocating buffer size
         - Best case: each cell in rows*cols is a typed char, so cap = rows*cols
         - Worst case: each cell is a color code (20 bytes max)
@@ -25,12 +27,17 @@ void tb_create(term_buf* b, u32 rows, u32 cols)
 
     b->cap = cap_bytes;
     b->len = 0;
+
+    return b;
 }
 
 void tb_destroy(term_buf* b)
 {
-    if (b && b->data) {
-        free(b->data);
+    if (b) {
+        if (b->data) {
+            free(b->data);
+        }
+        free(b);
     }
 }
 

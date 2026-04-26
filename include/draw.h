@@ -1,8 +1,10 @@
 #ifndef CMONKEY_DRAW
 #define CMONKEY_DRAW
 
+#include "Queue_single.h"
 #include "buffer.h"
 #include "config.h"
+#include "wordbank.h"
 
 
 // escape seq
@@ -129,7 +131,7 @@ void draw_box(term_buf* b, Box box, cmonkey_theme* t, cmonkey_conf* c);
 /*
     knows the box's boundry so warps words to the next line
 */
-void draw_words_in_box(term_buf* b, Box box, const char** words,
+void draw_words_in_box(term_buf* b, Box box, Queue* q, WordBank* wb,
                        u32 num_words, const cmonkey_theme* t);
 
 

@@ -63,9 +63,11 @@ typedef struct {
 
 
 // load theme file and convert values to ansi escape seq
-void theme_load(cmonkey_theme* t, const char* filepath);
+cmonkey_theme* theme_load(const char* filepath);
+void theme_unload(cmonkey_theme* t);
 
-void config_load(cmonkey_conf* c, const char* filepath);
+cmonkey_conf* config_load(const char* filepath);
+void config_unload(cmonkey_conf* c);
 
 
 

@@ -11,7 +11,7 @@ typedef struct {
 } term_buf;
 
 
-void tb_create(term_buf* b, u32 rows, u32 cols);
+term_buf* tb_create(u32 rows, u32 cols);
 
 void tb_destroy(term_buf* b);
 

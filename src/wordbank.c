@@ -1,4 +1,5 @@
 #include "wordbank.h"
+#include "Queue_single.h"
 #include "arena_single.h"
 #include "random_single.h"
 
@@ -234,6 +235,13 @@ WordBank* wordbank_create(const char* filename, u32 num_random_words)
         i++;
     }
 
+    // shuffle all words
+    for (u32 k = load_count - 1; k > 0; k--) {
+        u32 j = pcg32_rand_bounded(k + 1);
+        Word tmp = *(Word*)genVec_get_ptr(wb->words, k);
+        *(Word*)genVec_get_ptr(wb->words, k) = *(Word*)genVec_get_ptr(wb->words, j);
+        *(Word*)genVec_get_ptr(wb->words, j) = tmp;
+    }
     wb->cursor = 0;
     wb->num_random_words = num_random_words;
 
@@ -291,7 +299,8 @@ void wordbank_random_words_in_queue(WordBank* wb, Queue* q)
             }
             wb->cursor = 0;
         }
-        enqueue(q, genVec_get_ptr(wb->words, wb->cursor++));
+        // enqueue(q, genVec_get_ptr(wb->words, wb->cursor++));
+        enqueue(q, cast(i));
     }
 }
 

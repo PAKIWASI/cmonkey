@@ -1,6 +1,9 @@
 #include "draw.h"
 #include "buffer.h"
 #include "config.h"
+#include "gen_vector_single.h"
+#include "wc_macros_single.h"
+#include "wordbank.h"
 
 
 
@@ -90,18 +93,31 @@ void draw_box(term_buf* b, Box box, cmonkey_theme* t, cmonkey_conf* c)
     draw_theme_reset(b, t);
 }
 
-void draw_words_in_box(term_buf* b, Box box, const char** words,
+void draw_words_in_box(term_buf* b, Box box, Queue* q, WordBank* wb,
                        u32 num_words, const cmonkey_theme* t)
 {
-    draw_move(b, box.r, box.c);
     draw_bg(b, t->text_bg);
     draw_fg(b, t->text_fg);
 
-    // calculate total length, adding each word's len
-    // then see if we need to go to the next line
-    for (u32 i = 0; i < num_words; i++) {
+    u32 inner_w = box.w - 2;  // subtract borders
+    u32 line     = box.r + 1;
+    u32 line_len = 1;
 
+    for (u32 i = 0; i < num_words; i++) {
+        Word* w = (Word*)genVec_get_ptr(wb->words, DEQUEUE(q, u32));
+
+        // wrap before drawing if word doesn't fit
+        if (line_len + w->len >= inner_w) {
+            line++;
+            line_len = 1;
+        }
+
+        draw_move(b, line, box.c + 1 + line_len);
+        tb_append_n(b, wordbank_word_at(wb, w->idx), w->len);
+        line_len += w->len + 1;  // +1 for space
     }
+
+    draw_theme_reset(b, t);
 }
 
 

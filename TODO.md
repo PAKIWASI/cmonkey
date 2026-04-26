@@ -14,3 +14,8 @@
     draw a box, only the box borders get the bg. for text, we need to call draw fg/bg within the 
     text drawing func then revert it back. global fg, bg should come at start
 9. if we want to fill a box with a bg, we need to explictily fill each cell in the box
+
+#### imp:
+    so some wordbanks are not ordered by freq, like eng450k and we load 100k words, so they are sequencial
+    we get alot of words starting with the same letters. if the "oderedbyfreq" key is false, we should
+    shuffle?
