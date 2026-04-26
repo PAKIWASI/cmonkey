@@ -87,8 +87,8 @@ extern void json_file_suite(void)
 {
     WC_SUITE("JSON File Read Tests");
 
-    // WC_RUN(test_wb_create);
-    // WC_RUN(test_get_words_in_queue);
+    WC_RUN(test_wb_create);
+    WC_RUN(test_get_words_in_queue);
     WC_RUN(test_get_words_refresh);
 }
 

@@ -9,7 +9,7 @@ void config_draw_suite(void);
 int main(void)
 {
     json_file_suite();
-    // config_draw_suite();
+    config_draw_suite();
 
     return WC_REPORT();
 }
