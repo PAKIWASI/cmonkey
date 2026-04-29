@@ -10,13 +10,13 @@
 typedef struct {
     WordBank*       wb;
     Queue*          q;
-    term_buf*       b;
+    term_buf*       tb;
     cmonkey_theme*  t;
     cmonkey_conf*   c;
     u32             rows;
     u32             cols;
-    bool            resize;
     bool            quit;
+    // bool            resize;
 } cmonkey;
 
 void cmonkey_begin(cmonkey* cm, const char* wb_path, const char* theme_path, const char* conf_path);
