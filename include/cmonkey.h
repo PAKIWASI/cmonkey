@@ -19,12 +19,20 @@ typedef struct {
     // bool            resize;
 } cmonkey;
 
-void cmonkey_begin(cmonkey* cm, const char* wb_path, const char* theme_path, const char* conf_path);
 
-void cmonekey_end(cmonkey* cm);
+// create the struct
+void cmonkey_create(cmonkey* cm, const char* wb_path, const char* theme_path, const char* conf_path);
+// destroy struct
+void cmonkey_destroy(cmonkey* cm);
+// setup terminal, get words, init system
+void cmonkey_begin(cmonkey* cm);
+// restore terminal etc
+void cmonkey_end(cmonkey* cm);
 
+// per frame logic change based on user input, time etc
 void cmonkey_update(cmonkey* cm);
 
+// drawing logic
 void cmonkey_draw(cmonkey* cm);
 
 
