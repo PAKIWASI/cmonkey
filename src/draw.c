@@ -48,7 +48,7 @@ void draw_text_with_color(term_buf* b, u32 row, u32 col, const char* fg,
     draw_theme_reset(b, t);
 }
 
-
+                                                    // TODO: just take border style
 void draw_box(term_buf* b, Box box, cmonkey_theme* t, cmonkey_conf* c)
 {
     // move

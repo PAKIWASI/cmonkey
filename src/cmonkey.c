@@ -1,9 +1,10 @@
 #include "cmonkey.h"
-#include "Queue_single.h"
-#include "common_single.h"
+#include "draw.h"
 
+#include <string.h>
 #include <termios.h>
 #include <signal.h>
+#include <time.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <asm-generic/ioctls.h>
@@ -34,17 +35,18 @@ void cmonkey_create(cmonkey* cm, const char* wb_path, const char* theme_path, co
 
     set_term_dims(cm);
 
+    cm->tb = tb_create(cm->rows, cm->cols);
+    CHECK_FATAL(!cm->tb, "term_buf creation failed");
+
     cm->quit = false;
 }
 
 void cmonkey_destroy(cmonkey* cm)
 {
     wordbank_destroy(cm->wb);
-
     queue_destroy(cm->q);
-
+    tb_destroy(cm->tb);
     theme_unload(cm->t);
-
     config_unload(cm->c);
 }
 
@@ -59,37 +61,96 @@ void cmonkey_begin(cmonkey* cm)
 
     // Set up terminal for raw mode
     struct termios raw = og_term;
+    raw.c_lflag &= ~(ECHO | ICANON);
 
-    // Input modes: disable break, CR-to-NL, parity check, strip high bit,
-    // enable 8-bit input, disable XON/XOFF flow control
-    // raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
-    
-    // Output modes: disable post-processing (e.g., \n -> \r\n)
-    // raw.c_oflag &= ~(OPOST);
-    
-    // Control modes: set 8-bit characters
-    // raw.c_cflag |= (CS8);
-    
-    // Local modes: disable echo, canonical mode, extended processing,
-    // signal characters (like ^C)
-    raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
-    
-    // Special characters: minimum characters for read, timeout in 0.1s
-    raw.c_cc[VMIN] = 0;   // Return immediately with what's available
-    raw.c_cc[VTIME] = 1;  // Wait up to 0.1 seconds
-    
     // Apply changes after draining output
     CHECK_WARN_RET(tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1,,
                    "setting term attr failed");
-    
+
+    // Switch to the alternate screen buffer so we don't clobber the
+    // user's scrollback, then hide the cursor and clear to theme colours.
+    tb_append_cstr(cm->tb, "\033[?1049h");   // enter alternate screen
+    tb_append_cstr(cm->tb, CURSOR_HIDE);     // hide cursor
+
+    draw_clear(cm->tb, cm->t);              // fill screen with theme bg/fg
+
+    tb_flush(cm->tb);
 }
 
-// terminal restore:
-//     tcsetattr(STDIN_FILENO, TCSAFLUSH, &original_termios);
+void cmonkey_end(void)
+{
+    // Reset all attributes, show cursor, leave alternate screen
+    // Do this directly via write() so it always fires even if the buffer
+    // is in a broken state.
+    const char* cleanup = "\033[0m"          // hard attribute reset
+                          "\033[?25h"        // show cursor
+                          "\033[?1049l";     // leave alternate screen
+    write(STDOUT_FILENO, cleanup, strlen(cleanup));
+
+    // Restore the saved terminal settings (cooked mode, echo back on)
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &og_term);
+    // TODO: show cursor
+}
 
 void cmonkey_update(cmonkey* cm)
 {
+    // Handle a pending terminal resize
+    if (resize_flag) {
+        resize_flag = 0;
+        set_term_dims(cm);
 
+        // TODO:
+        // if user resizes, it must be smaller than original RIGHT??
+        // then no need to realloc or create new
+        // but what if it was smaller then made larger?
+
+        // tb_destroy(cm->tb);
+        // cm->tb = tb_create(cm->rows, cm->cols);
+        // CHECK_FATAL(!cm->tb, "term_buf re-create after resize failed");
+    }
+}
+
+void cmonkey_draw(cmonkey* cm)
+{
+    // tb_reset(cm->tb);
+    draw_clear(cm->tb, cm->t);
+ 
+    tb_append_cstr(cm->tb, "\033[H");
+    tb_append_cstr(cm->tb, cm->t->reset);
+ 
+    Box box = {1, 1, cm->rows, cm->cols};
+    draw_box(cm->tb, box, cm->t, cm->c);
+ 
+    tb_flush(cm->tb);
+}
+
+
+#define TARGET_FPS      30
+#define FRAME_NS        (1000000000L / TARGET_FPS)
+ 
+// TODO: define seperate timer - ths is for testing
+// main loop with frame cap — call this instead of a bare while(1)
+void cmonkey_run(cmonkey* cm)
+{
+    struct timespec frame_start, frame_end;
+ 
+    while (!cm->quit) {
+        clock_gettime(CLOCK_MONOTONIC, &frame_start);
+ 
+        cmonkey_update(cm);
+        cmonkey_draw(cm);
+ 
+        clock_gettime(CLOCK_MONOTONIC, &frame_end);
+ 
+        long elapsed = ((frame_end.tv_sec  - frame_start.tv_sec)  * 1000000000L)
+                     + (frame_end.tv_nsec - frame_start.tv_nsec);
+ 
+        long remaining = FRAME_NS - elapsed;
+        if (remaining > 0) {
+            struct timespec ts = { .tv_sec = 0, .tv_nsec = remaining };
+            nanosleep(&ts, NULL);
+        }
+    }
 }
 
 
@@ -107,12 +168,33 @@ void set_term_dims(cmonkey* cm)
     cm->cols = ws.ws_col;
 }
 
-// When the user resizes the terminal, the kernel sends a SIGWINCH signal
-// You can catch it and re‑fetch the dimensions
+// When the user resizes the terminal, the kernel sends a SIGWINCH signal.
+// We set a flag here and handle the resize in cmonkey_update().
 void winch_handler(int sig)
 {
-    (void)sig;            // unused parameter
-    resize_flag = 1;      // set flag for main loop
+    (void)sig;
+    resize_flag = 1;
+}
+
+
+// Signal handler to ensure cleanup on Ctrl+C, etc.
+void signal_handler(int sig) {
+    // terminal_restore();
+
+    // Clear screen, show cursor, leave alternate screen
+    write(STDOUT_FILENO, "\033[0m\033[?25h\033[?1049l", 20);
+
+    // Reraise the signal with default behavior
+    signal(sig, SIG_DFL);
+    raise(sig);
+}
+
+// Register cleanup handlers
+void terminal_register_cleanup(void) {
+    signal(SIGINT,  signal_handler);  // Ctrl+C
+    signal(SIGTERM, signal_handler);  // kill command
+    signal(SIGQUIT, signal_handler);  // Ctrl+'\'
+    signal(SIGWINCH, winch_handler);  // terminal resize
 }
 
 

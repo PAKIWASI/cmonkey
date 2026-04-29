@@ -42,6 +42,7 @@ set (SRC_FILES
     src/buffer.c
     src/draw.c
     src/config.c
+    src/cmonkey.c
 )
 
 add_executable(main

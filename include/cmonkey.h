@@ -27,7 +27,7 @@ void cmonkey_destroy(cmonkey* cm);
 // setup terminal, get words, init system
 void cmonkey_begin(cmonkey* cm);
 // restore terminal etc
-void cmonkey_end(cmonkey* cm);
+void cmonkey_end(void);
 
 // per frame logic change based on user input, time etc
 void cmonkey_update(cmonkey* cm);
@@ -35,6 +35,8 @@ void cmonkey_update(cmonkey* cm);
 // drawing logic
 void cmonkey_draw(cmonkey* cm);
 
+// frame-capped game loop
+void cmonkey_run(cmonkey* cm);
 
 
 #endif // CMONKEY_H
