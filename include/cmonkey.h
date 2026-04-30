@@ -8,7 +8,7 @@
 
 
 typedef struct {
-    WordBank*       wb;
+    WordBank       wb;
     Queue*          q;
     term_buf*       tb;
     cmonkey_theme*  t;

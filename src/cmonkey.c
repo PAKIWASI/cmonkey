@@ -23,8 +23,8 @@ static struct termios og_term;
 
 void cmonkey_create(cmonkey* cm, const char* wb_path, const char* theme_path, const char* conf_path)
 {
-    cm->wb = wordbank_create(wb_path, NUM_RAND_WORDS);
-    CHECK_FATAL(!cm->wb, "wordbank creation failed");
+    wordbank_create(&cm->wb, wb_path, NUM_RAND_WORDS);
+    CHECK_FATAL(!cm->wb.words | !cm->wb.arena, "wordbank creation failed");
 
     cm->q = queue_create((u64)NUM_RAND_WORDS * 2, sizeof(u32), NULL);
 
@@ -44,7 +44,7 @@ void cmonkey_create(cmonkey* cm, const char* wb_path, const char* theme_path, co
 
 void cmonkey_destroy(cmonkey* cm)
 {
-    wordbank_destroy(cm->wb);
+    wordbank_destroy(&cm->wb);
     queue_destroy(cm->q);
     tb_destroy(cm->tb);
     theme_unload(cm->t);

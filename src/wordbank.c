@@ -125,20 +125,18 @@ static int find_words_arr(char* json_buf, jsmntok_t* toks, int num_tokens)
     return words_arr;
 }
 
-WordBank* wordbank_create(const char* filename, u32 num_random_words)
+void wordbank_create(WordBank* wb, const char* filename, u32 num_random_words)
 {
     // Read file into a temporary heap buffer
     u32   json_len = 0;
     char* json_buf = read_file(filename, &json_len);
-    CHECK_WARN_RET(!json_buf, NULL, "failed to read '%s'", filename);
+    CHECK_WARN_RET(!json_buf, , "failed to read '%s'", filename);
 
     int         num_tokens = 0;
     jsmn_parser parser;
     // get token array, tokens stored inline
     jsmntok_t* toks = jsmn_parse_json(json_buf, json_len, &parser, &num_tokens);
-    CHECK_WARN_RET(!toks, NULL, "jsmn parse failed");
-
-    WordBank* wb = NULL;
+    CHECK_WARN_RET(!toks, , "jsmn parse failed");
 
     // returns the offset to value of "words" key: the words array itself
     int words_arr = find_words_arr(json_buf, toks, num_tokens);
@@ -166,12 +164,6 @@ WordBank* wordbank_create(const char* filename, u32 num_random_words)
         load_count   = MAX_LOAD_WORDS;
     }
 
-    wb = malloc(sizeof(WordBank));
-    if (!wb) {
-        WARN("OOM WordBank");
-        goto cleanup;
-    }
-
     // Size pass: walk tokens starting at start_offset-th matching word, wrapping around.
     // Once we wrap, skipped is set to start_offset so we no longer skip anything —
     // the wrapped portion starts at the beginning of the array and all words are valid.
@@ -196,11 +188,7 @@ WordBank* wordbank_create(const char* filename, u32 num_random_words)
     }
 
     wb->arena = arena_create(bytes_needed);
-    if (!wb->arena) {
-        WARN("arena_create failed");
-        goto cleanup;
-    }
-    
+
     // size is equal to num of loaded words
     wb->words = genVec_init(load_count, sizeof(Word), NULL);
 
@@ -249,17 +237,12 @@ WordBank* wordbank_create(const char* filename, u32 num_random_words)
     free(json_buf);
 
     LOG("loaded %u words (%lu bytes)", found, arena_used(wb->arena));
-    return wb;
 
 cleanup:
     free(json_buf);
     free(toks);
-    if (wb) {
-        if (wb->arena) { arena_release(wb->arena); }
-        if (wb->words) { genVec_destroy(wb->words); }
-        free(wb);
-    }
-    return NULL;
+    if (wb->arena) { arena_release(wb->arena); }
+    if (wb->words) { genVec_destroy(wb->words); }
 }
 
 void wordbank_destroy(WordBank* wb)
@@ -272,7 +255,6 @@ void wordbank_destroy(WordBank* wb)
 
     arena_release(wb->arena);
     genVec_destroy(wb->words);
-    free(wb);
 }
 
 

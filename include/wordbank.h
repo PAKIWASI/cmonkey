@@ -22,7 +22,7 @@ typedef struct {
 // 2. ARABIC is loading correctly with setlocate(), idk about cursor movement
 
 // Load entire JSON word list into memory.
-WordBank* wordbank_create(const char* filename, u32 num_random_words);
+void wordbank_create(WordBank* wb, const char* filename, u32 num_random_words);
 
 // Destroy and free all memory.
 void wordbank_destroy(WordBank* wb);
