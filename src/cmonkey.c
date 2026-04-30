@@ -1,6 +1,5 @@
 #include "cmonkey.h"
 #include "draw.h"
-#include "random_single.h"
 #include "timer.h"
 
 #include <stdio.h>
@@ -40,8 +39,8 @@ void cmonkey_create(cmonkey* cm, const char* wb_path, const char* theme_path, co
 
     timer_begin(&cm->timer, FPS);
 
-    cm->x = 1;
-    cm->y = 1;
+    cm->x  = 1;
+    cm->y  = 1;
     cm->vx = 1;
     cm->vy = 1;
 
