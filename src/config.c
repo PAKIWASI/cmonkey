@@ -103,13 +103,10 @@ static bool parse_kv(char* line, int line_num, const char* ctx,
 
 // theme
 
-cmonkey_theme* theme_load(const char* filepath)
+bool theme_load(cmonkey_theme* t, const char* filepath)
 {
     FILE* fp = fopen(filepath, "r");
-    CHECK_WARN_RET(!fp, NULL, "Cannot open theme '%s', using defaults\n", filepath);
-
-    cmonkey_theme* t = malloc(sizeof(cmonkey_theme));
-    CHECK_FATAL(!t, "theme malloc failed");
+    CHECK_WARN_RET(!fp, false, "Cannot open theme '%s', using defaults\n", filepath);
 
     char line[256];
     int  line_num = 0;
@@ -136,7 +133,7 @@ cmonkey_theme* theme_load(const char* filepath)
     snprintf(t->reset, sizeof(t->reset), "\033[0m%s%s",
              t->main_fg, t->main_bg);
 
-    return t;
+    return true;
 }
 
 
@@ -197,13 +194,10 @@ static void hex_to_escape(const char* hex, bool is_fg,
 
 // conf
 
-cmonkey_conf* config_load(const char* filepath)
+bool config_load(cmonkey_conf* c, const char* filepath)
 {
     FILE* fp = fopen(filepath, "r");
-    CHECK_WARN_RET(!fp, NULL, "Cannot open config '%s', using defaults\n", filepath);
-
-    cmonkey_conf* c = malloc(sizeof(cmonkey_conf));
-    CHECK_FATAL(!c, "conf malloc failed");
+    CHECK_WARN_RET(!fp, false, "Cannot open config '%s', using defaults\n", filepath);
 
     char line[256];
     int  line_num = 0;
@@ -237,15 +231,5 @@ cmonkey_conf* config_load(const char* filepath)
 
     fclose(fp);
 
-    return c;
-}
-
-void theme_unload(cmonkey_theme* t)
-{
-    free(t);
-}
-
-void config_unload(cmonkey_conf* c)
-{
-    free(c);
+    return true;
 }

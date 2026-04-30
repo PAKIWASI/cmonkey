@@ -2,6 +2,7 @@
 #define CMONKEY_CONFIG
 
 
+#include <stdbool.h>
 #define COLOR_ESC_MAX 32      // enough for "\033[38;2;255;255;255m"
 
 
@@ -64,11 +65,9 @@ typedef struct {
 
 
 // load theme file and convert values to ansi escape seq
-cmonkey_theme* theme_load(const char* filepath);
-void theme_unload(cmonkey_theme* t);
+bool theme_load(cmonkey_theme* t, const char* filepath);
 
-cmonkey_conf* config_load(const char* filepath);
-void config_unload(cmonkey_conf* c);
+bool config_load(cmonkey_conf* c, const char* filepath);
 
 
 

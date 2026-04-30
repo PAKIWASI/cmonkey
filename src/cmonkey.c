@@ -26,18 +26,14 @@ void cmonkey_create(cmonkey* cm, const char* wb_path, const char* theme_path, co
     wordbank_create(&cm->wb, wb_path, NUM_RAND_WORDS);
     CHECK_FATAL(!cm->wb.words | !cm->wb.arena, "wordbank creation failed");
 
-    cm->q = queue_create((u64)NUM_RAND_WORDS * 2, sizeof(u32), NULL);
+    queue_create_stk(&cm->q, (u64)NUM_RAND_WORDS * 2, sizeof(u32), NULL);
 
-    cm->t = theme_load(theme_path);
-    CHECK_FATAL(!cm->t, "theme load failed");
-
-    cm->c = config_load(conf_path);
-    CHECK_FATAL(!cm->c, "config load failed");
+    CHECK_FATAL(!theme_load(&cm->t, theme_path), "theme load failed");
+    CHECK_FATAL(!config_load(&cm->c, theme_path), "config load failed");
 
     set_term_dims(cm);
 
-    cm->tb = tb_create(cm->rows, cm->cols);
-    CHECK_FATAL(!cm->tb, "term_buf creation failed");
+    tb_create(&cm->tb, cm->rows, cm->cols);
 
     cm->quit = false;
 }
@@ -45,10 +41,8 @@ void cmonkey_create(cmonkey* cm, const char* wb_path, const char* theme_path, co
 void cmonkey_destroy(cmonkey* cm)
 {
     wordbank_destroy(&cm->wb);
-    queue_destroy(cm->q);
-    tb_destroy(cm->tb);
-    theme_unload(cm->t);
-    config_unload(cm->c);
+    queue_destroy_stk(&cm->q);
+    tb_destroy(&cm->tb);
 }
 
 void cmonkey_begin(cmonkey* cm)
@@ -72,12 +66,12 @@ void cmonkey_begin(cmonkey* cm)
 
     // Switch to the alternate screen buffer so we don't clobber the
     // user's scrollback, then hide the cursor and clear to theme colours.
-    tb_append_cstr(cm->tb, "\033[?1049h");   // enter alternate screen
-    tb_append_cstr(cm->tb, CURSOR_HIDE);     // hide cursor
+    tb_append_cstr(&cm->tb, "\033[?1049h");   // enter alternate screen
+    tb_append_cstr(&cm->tb, CURSOR_HIDE);     // hide cursor
 
-    draw_clear(cm->tb, cm->t);              // fill screen with theme bg/fg
+    draw_clear(&cm->tb, &cm->t);              // fill screen with theme bg/fg
 
-    tb_flush(cm->tb);
+    tb_flush(&cm->tb);
 }
 
 void cmonkey_end(void)
@@ -112,15 +106,15 @@ void cmonkey_update(cmonkey* cm)
 void cmonkey_draw(cmonkey* cm)
 {
     // tb_reset(cm->tb);
-    draw_clear(cm->tb, cm->t);
+    draw_clear(&cm->tb, &cm->t);
  
-    tb_append_cstr(cm->tb, "\033[H");
-    tb_append_cstr(cm->tb, cm->t->reset);
+    tb_append_cstr(&cm->tb, "\033[H");
+    tb_append_cstr(&cm->tb, cm->t.reset);
  
     Box box = {1, 1, cm->rows, cm->cols};
-    draw_box(cm->tb, box, cm->t, cm->c);
+    draw_box(&cm->tb, box, &cm->t, &cm->c);
  
-    tb_flush(cm->tb);
+    tb_flush(&cm->tb);
 }
 
 
