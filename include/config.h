@@ -40,6 +40,7 @@ static const char BORDER_CHARS[4][6][8] = {
     {},
 };
 
+// TODO:
 typedef enum {
     CURSOR_BAR      = 0,
     CURSOR_BLOCK,

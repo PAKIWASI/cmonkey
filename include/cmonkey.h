@@ -16,7 +16,6 @@ typedef struct {
     u32             rows;
     u32             cols;
     bool            quit;
-    // bool            resize;
 } cmonkey;
 
 

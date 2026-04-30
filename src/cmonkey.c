@@ -14,7 +14,8 @@
 
 static volatile sig_atomic_t resize_flag = 0;
 static void set_term_dims(cmonkey* cm);
-void winch_handler(int sig);    // TODO: can i make this static?
+static void winch_handler(int sig);
+static void terminal_register_cleanup(void);
 
 // Store original terminal settings for restoration
 static struct termios og_term;
@@ -56,6 +57,8 @@ void cmonkey_begin(cmonkey* cm)
     struct sigaction sa = { .sa_handler = winch_handler };
     sigaction(SIGWINCH, &sa, NULL);
 
+    terminal_register_cleanup();
+
     CHECK_WARN_RET(tcgetattr(STDIN_FILENO, &og_term) == -1,,
                    "tcgetattr failed");
 
@@ -79,17 +82,13 @@ void cmonkey_begin(cmonkey* cm)
 
 void cmonkey_end(void)
 {
-    // Reset all attributes, show cursor, leave alternate screen
-    // Do this directly via write() so it always fires even if the buffer
-    // is in a broken state.
     const char* cleanup = "\033[0m"          // hard attribute reset
-                          "\033[?25h"        // show cursor
+                          "\033[?25h"        // show cursor (was ?25h, which is correct)
                           "\033[?1049l";     // leave alternate screen
     write(STDOUT_FILENO, cleanup, strlen(cleanup));
 
-    // Restore the saved terminal settings (cooked mode, echo back on)
+    // Restore the saved terminal settings
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &og_term);
-    // TODO: show cursor
 }
 
 void cmonkey_update(cmonkey* cm)
@@ -129,7 +128,7 @@ void cmonkey_draw(cmonkey* cm)
 #define FRAME_NS        (1000000000L / TARGET_FPS)
  
 // TODO: define seperate timer - ths is for testing
-// main loop with frame cap — call this instead of a bare while(1)
+// main loop with frame cap
 void cmonkey_run(cmonkey* cm)
 {
     struct timespec frame_start, frame_end;
@@ -178,19 +177,24 @@ void winch_handler(int sig)
 
 
 // Signal handler to ensure cleanup on Ctrl+C, etc.
-void signal_handler(int sig) {
-    // terminal_restore();
-
-    // Clear screen, show cursor, leave alternate screen
-    write(STDOUT_FILENO, "\033[0m\033[?25h\033[?1049l", 20);
+static void signal_handler(int sig) 
+{
+    // Reset attributes, show cursor, leave alternate screen
+    const char* cleanup = "\033[0m\033[?25h\033[?1049l";
+    write(STDOUT_FILENO, cleanup, strlen(cleanup));
+    
+    // Restore terminal settings
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &og_term);
 
     // Reraise the signal with default behavior
     signal(sig, SIG_DFL);
     raise(sig);
 }
 
+// TODO: where to call?
 // Register cleanup handlers
-void terminal_register_cleanup(void) {
+static void terminal_register_cleanup(void) 
+{
     signal(SIGINT,  signal_handler);  // Ctrl+C
     signal(SIGTERM, signal_handler);  // kill command
     signal(SIGQUIT, signal_handler);  // Ctrl+'\'
