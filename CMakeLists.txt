@@ -43,6 +43,7 @@ set (SRC_FILES
     src/draw.c
     src/config.c
     src/cmonkey.c
+    src/timer.c
 )
 
 add_executable(main

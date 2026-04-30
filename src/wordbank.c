@@ -238,6 +238,8 @@ void wordbank_create(WordBank* wb, const char* filename, u32 num_random_words)
 
     LOG("loaded %u words (%lu bytes)", found, arena_used(wb->arena));
 
+    return;
+
 cleanup:
     free(json_buf);
     free(toks);

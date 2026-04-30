@@ -11,16 +11,19 @@ static int test_timer_1(void)
         timer_tick(&timer);
 
         // work
-        for (u32 i = 0; i < 10000; i++) {
-            u32 j = i*i*i*i*i;
-            j *= j;
+        for (u32 i = 0; i < 1000; i++) {
+            for (u32 k = 0; k < 10000; k++) {
+                u32 j = i*i*i*i*i;
+                j *= j;
+            }
         }
 
-        float dt = timer_get_delta(&timer);
 
         timer_end_frame(&timer);
+        float dt = timer_get_delta(&timer);
+        float fps = timer_get_fps(&timer);
         timer_sleep(&timer);
-        printf("FPS: %.1f  dt: %.4f\n", timer_get_fps(&timer), dt);
+        printf("FPS: %.1f  dt: %.4f\n", fps, dt);
     }
 
     return 0;
