@@ -10,9 +10,9 @@ void timer_begin(cmonkey_timer* t, u8 target_fps)
 {
     t->target_fps = target_fps;
     // pre-compute target_dt once so you're not dividing every frame
-    t->target_dt  = 1.0f / (float)target_fps;
-    t->elapsed    = 0.0f;
-    t->remaining  = 0.0f;
+    t->target_dt = 1.0f / (float)target_fps;
+    t->elapsed   = t->target_dt;
+    t->remaining = 0.0f;
     clock_gettime(CLOCK_MONOTONIC, &t->frame_start);
     // seeds next_frame_time to right now. This is the running deadline
     // it will be advanced by exactly target_dt each frame
@@ -20,46 +20,36 @@ void timer_begin(cmonkey_timer* t, u8 target_fps)
     t->next_frame_time = t->frame_start;
 }
 
-// snapshots the current time
-// Called at the top of game loop
 void timer_tick(cmonkey_timer* t)
 {
-    clock_gettime(CLOCK_MONOTONIC, &t->frame_start);
-}
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
 
-// Snapshots end time, computes how long the frame's work actually took
-void timer_end_frame(cmonkey_timer* t)
-{
-    clock_gettime(CLOCK_MONOTONIC, &t->frame_end);
-    t->elapsed = timespec_diff_s(t->frame_start, t->frame_end);
+    // full frame time: previous tick to this tick (includes sleep)
+    t->elapsed = timespec_diff_s(t->frame_start, now);
 
-    // Advance next_frame_time by one target frame
-    // manual carry — tv_nsec must stay in [0, 999999999]
-    // If adding the frame duration pushes it over one billion nanoseconds
-    // you carry 1 into tv_sec and subtract
+    t->frame_start = now;
+
+    // advance deadline
     t->next_frame_time.tv_nsec += (long)(t->target_dt * 1e9f);
     if (t->next_frame_time.tv_nsec >= 1000000000L) {
         t->next_frame_time.tv_sec += 1;
         t->next_frame_time.tv_nsec -= 1000000000L;
     }
+}
 
-    // Remaining = how long until next frame should start
+void timer_end_frame(cmonkey_timer* t)
+{
+    // just compute remaining for sleep
+    clock_gettime(CLOCK_MONOTONIC, &t->frame_end);
     t->remaining = timespec_diff_s(t->frame_end, t->next_frame_time);
     if (t->remaining < 0.0f) {
-        t->remaining = 0.0f; // overran — don't sleep
+        t->remaining = 0.0f;
     }
 }
 
 void timer_sleep(cmonkey_timer* t)
 {
     // sleeps until an absolute monotonic time
-    clock_nanosleep(
-        CLOCK_MONOTONIC,
-        TIMER_ABSTIME,
-        &t->next_frame_time,
-        NULL
-    );
+    clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &t->next_frame_time, NULL);
 }
-
-
-

@@ -1,16 +1,19 @@
 #include "cmonkey.h"
 #include "draw.h"
+#include "random_single.h"
+#include "timer.h"
 
+#include <stdio.h>
 #include <string.h>
 #include <termios.h>
 #include <signal.h>
-#include <time.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <asm-generic/ioctls.h>
 
 
 #define NUM_RAND_WORDS 200
+#define FPS 60
 
 static volatile sig_atomic_t resize_flag = 0;
 static void set_term_dims(cmonkey* cm);
@@ -35,6 +38,13 @@ void cmonkey_create(cmonkey* cm, const char* wb_path, const char* theme_path, co
 
     tb_create(&cm->tb, cm->rows, cm->cols);
 
+    timer_begin(&cm->timer, FPS);
+
+    cm->x = 1;
+    cm->y = 1;
+    cm->vx = 1;
+    cm->vy = 1;
+
     cm->quit = false;
 }
 
@@ -58,7 +68,7 @@ void cmonkey_begin(cmonkey* cm)
 
     // Set up terminal for raw mode
     struct termios raw = og_term;
-    raw.c_lflag &= ~(ECHO | ICANON);
+    raw.c_lflag &= (tcflag_t)~(ECHO | ICANON);
 
     // Apply changes after draining output
     CHECK_WARN_RET(tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1,,
@@ -101,6 +111,16 @@ void cmonkey_update(cmonkey* cm)
         // cm->tb = tb_create(cm->rows, cm->cols);
         // CHECK_FATAL(!cm->tb, "term_buf re-create after resize failed");
     }
+
+    cm->x += cm->vx;
+    if (cm->x >= cm->rows || cm->x <= 0) {
+        cm->vx *= -1;
+    }
+
+    cm->y += cm->vy;
+    if (cm->y >= cm->cols || cm->y <= 0) {
+        cm->vy *= -1;
+    }
 }
 
 void cmonkey_draw(cmonkey* cm)
@@ -108,41 +128,35 @@ void cmonkey_draw(cmonkey* cm)
     // tb_reset(cm->tb);
     draw_clear(&cm->tb, &cm->t);
  
-    tb_append_cstr(&cm->tb, "\033[H");
+    // tb_append_cstr(&cm->tb, "\033[H");
     tb_append_cstr(&cm->tb, cm->t.reset);
  
-    Box box = {1, 1, cm->rows, cm->cols};
+    Box box = {cm->x, cm->y, 3, 5};
     draw_box(&cm->tb, box, &cm->t, &cm->c);
- 
+
+    char buf[128] = "";
+
+    snprintf(buf, 128, "FPS: %.2f   Delta: %.4f",
+             timer_get_fps(&cm->timer), timer_get_delta(&cm->timer));
+
+
+    draw_text(&cm->tb, 1, 1, &cm->t, buf);
+
     tb_flush(&cm->tb);
 }
 
 
-#define TARGET_FPS      30
-#define FRAME_NS        (1000000000L / TARGET_FPS)
- 
-// TODO: define seperate timer - ths is for testing
-// main loop with frame cap
+// main loop
 void cmonkey_run(cmonkey* cm)
 {
-    struct timespec frame_start, frame_end;
- 
     while (!cm->quit) {
-        clock_gettime(CLOCK_MONOTONIC, &frame_start);
+        timer_tick(&cm->timer);
  
         cmonkey_update(cm);
         cmonkey_draw(cm);
  
-        clock_gettime(CLOCK_MONOTONIC, &frame_end);
- 
-        long elapsed = ((frame_end.tv_sec  - frame_start.tv_sec)  * 1000000000L)
-                     + (frame_end.tv_nsec - frame_start.tv_nsec);
- 
-        long remaining = FRAME_NS - elapsed;
-        if (remaining > 0) {
-            struct timespec ts = { .tv_sec = 0, .tv_nsec = remaining };
-            nanosleep(&ts, NULL);
-        }
+        timer_end_frame(&cm->timer);
+        timer_sleep(&cm->timer);
     }
 }
 
@@ -185,7 +199,6 @@ static void signal_handler(int sig)
     raise(sig);
 }
 
-// TODO: where to call?
 // Register cleanup handlers
 static void terminal_register_cleanup(void) 
 {

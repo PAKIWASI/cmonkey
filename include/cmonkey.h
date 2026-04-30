@@ -1,6 +1,7 @@
 #ifndef CMONKEY_H
 #define CMONKEY_H
 
+#include "timer.h"
 #include "wordbank.h"
 #include "Queue_single.h"
 #include "buffer.h"
@@ -13,8 +14,15 @@ typedef struct {
     term_buf       tb;
     cmonkey_theme  t;
     cmonkey_conf   c;
+    cmonkey_timer  timer;
     u32            rows;
     u32            cols;
+    // testing
+    u32            x;
+    u32            y;
+    int            vx;
+    int            vy;
+    //
     bool           quit;
 } cmonkey;
 
