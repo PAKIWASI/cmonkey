@@ -57,6 +57,7 @@ add_executable(tests
     tests/test_main.c
     tests/test_json_wordbank_loader.c
     tests/test_buf_draw.c
+    tests/test_timer.c
     ${SRC_FILES}
 )
 target_include_directories(tests PRIVATE include tests external)

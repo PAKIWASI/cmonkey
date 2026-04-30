@@ -29,7 +29,7 @@ void cmonkey_create(cmonkey* cm, const char* wb_path, const char* theme_path, co
     queue_create_stk(&cm->q, (u64)NUM_RAND_WORDS * 2, sizeof(u32), NULL);
 
     CHECK_FATAL(!theme_load(&cm->t, theme_path), "theme load failed");
-    CHECK_FATAL(!config_load(&cm->c, theme_path), "config load failed");
+    CHECK_FATAL(!config_load(&cm->c, conf_path), "config load failed");
 
     set_term_dims(cm);
 

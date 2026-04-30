@@ -13,9 +13,9 @@ typedef struct {
     term_buf       tb;
     cmonkey_theme  t;
     cmonkey_conf   c;
-    u32             rows;
-    u32             cols;
-    bool            quit;
+    u32            rows;
+    u32            cols;
+    bool           quit;
 } cmonkey;
 
 

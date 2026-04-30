@@ -26,60 +26,59 @@
 
 static int test_wb_create(void)
 {
-    WordBank* wb = wordbank_create(CURR_FILE, NUM_RAND_WORDS);
-    WC_ASSERT_NOT_NULL(wb);
-    if (!wb) {
-        return -1;
-    }
+    WordBank wb = {0};
+    wordbank_create(&wb, CURR_FILE, NUM_RAND_WORDS);
 
-    WC_ASSERT_EQ_U64(genVec_size(wb->words), wordbank_size(wb));
+    WC_ASSERT_EQ_U64(genVec_size(wb.words), wordbank_size(&wb));
 
-    wordbank_destroy(wb);
+    wordbank_destroy(&wb);
     return 0;
 }
 
 static int test_get_words_in_queue(void)
 {
-    WordBank* wb = wordbank_create(CURR_FILE, NUM_RAND_WORDS);
+    WordBank wb = {0};
+    wordbank_create(&wb, CURR_FILE, NUM_RAND_WORDS);
     Queue* q = queue_create(NUM_RAND_WORDS, sizeof(u32), NULL);
 
-    wordbank_random_words_in_queue(wb, q);
+    wordbank_random_words_in_queue(&wb, q);
 
     for (u32 i = 0; i < 210; i++) {
         u32 i1 = DEQUEUE(q, u32);   // queue stores index into genvec
-        Word* w = (Word*)genVec_get_ptr(wb->words, i1); // use it to access Word struct (cont. index, len into arena)
-        printf("%s\t", wordbank_word_at(wb, w->idx));   // use htat index to get the word
+        Word* w = (Word*)genVec_get_ptr(wb.words, i1); // use it to access Word struct (cont. index, len into arena)
+        printf("%s\t", wordbank_word_at(&wb, w->idx));   // use htat index to get the word
         printf("%d\t", w->len);         // also get len
     }
 
     queue_destroy(q);
-    wordbank_destroy(wb);
+    wordbank_destroy(&wb);
     return 0;
 }
 
 static int test_get_words_refresh(void)
 {
-    WordBank* wb = wordbank_create(CURR_FILE, NUM_RAND_WORDS);
+    WordBank wb = {0};
+    wordbank_create(&wb, CURR_FILE, NUM_RAND_WORDS);
     Queue* q = queue_create((u64)NUM_RAND_WORDS * 2, sizeof(u32), NULL);
 
-    wordbank_random_words_in_queue(wb, q);
+    wordbank_random_words_in_queue(&wb, q);
 
     for (u32 i = 0; i < 1000; i++)
     {
         // refresh condition
         if ((float)queue_size(q) / (float)NUM_RAND_WORDS < 0.2F) {
-            wordbank_random_words_in_queue(wb, q);
+            wordbank_random_words_in_queue(&wb, q);
             LOG("queue refreshed: %lu", queue_size(q)); 
         }
 
         u32 i1 = DEQUEUE(q, u32);   // queue stores index into genvec
-        Word* w = (Word*)genVec_get_ptr(wb->words, i1); // use it to access Word struct (cont. index, len into arena)
-        printf("%s\t", wordbank_word_at(wb, w->idx));   // use htat index to get the word
+        Word* w = (Word*)genVec_get_ptr(wb.words, i1); // use it to access Word struct (cont. index, len into arena)
+        printf("%s\t", wordbank_word_at(&wb, w->idx));   // use htat index to get the word
         printf("%d\t", w->len);         // also get len
     }
 
     queue_destroy(q);
-    wordbank_destroy(wb);
+    wordbank_destroy(&wb);
     return 0;
 }
 
