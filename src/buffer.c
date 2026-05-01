@@ -44,7 +44,7 @@ void tb_reset(term_buf* b)
 void tb_append_cstr(term_buf* b, const char* s)
 {
     u32 n = (u32)strlen(s);
-    CHECK_WARN_RET(n + b->len >= b->cap,  , "buf not enough");
+    CHECK_WARN_RET(n + b->len >= b->cap, , "buf not enough");
 
     strncpy(NEXT_SLOT(b), s, n);
     b->len += n;
@@ -52,7 +52,7 @@ void tb_append_cstr(term_buf* b, const char* s)
 
 void tb_append_n(term_buf* b, const char* s, u32 n)
 {
-    CHECK_WARN_RET(n + b->len >= b->cap,  , "buf not enough");
+    CHECK_WARN_RET(n + b->len >= b->cap, , "buf not enough");
 
     strncpy(NEXT_SLOT(b), s, n);
     b->len += n;
@@ -74,5 +74,3 @@ void tb_flush(term_buf* b)
     write(STDOUT_FILENO, b->data, b->len);
     b->len = 0; // reset each frame
 }
-
-

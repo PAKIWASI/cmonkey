@@ -53,3 +53,4 @@ void timer_sleep(cmonkey_timer* t)
     // sleeps until an absolute monotonic time
     clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &t->next_frame_time, NULL);
 }
+

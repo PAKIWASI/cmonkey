@@ -2,22 +2,22 @@
 #include "draw.h"
 #include "timer.h"
 
+#include <asm-generic/ioctls.h>
+#include <signal.h>
 #include <stdio.h>
 #include <string.h>
-#include <termios.h>
-#include <signal.h>
-#include <unistd.h>
 #include <sys/ioctl.h>
-#include <asm-generic/ioctls.h>
+#include <termios.h>
+#include <unistd.h>
 
 
 #define NUM_RAND_WORDS 200
-#define FPS 60
+#define FPS            60
 
 static volatile sig_atomic_t resize_flag = 0;
-static void set_term_dims(cmonkey* cm);
-static void winch_handler(int sig);
-static void terminal_register_cleanup(void);
+static void                  set_term_dims(cmonkey* cm);
+static void                  winch_handler(int sig);
+static void                  terminal_register_cleanup(void);
 
 // Store original terminal settings for restoration
 static struct termios og_term;
@@ -57,37 +57,35 @@ void cmonkey_destroy(cmonkey* cm)
 void cmonkey_begin(cmonkey* cm)
 {
     // set SIGWINCH handler
-    struct sigaction sa = { .sa_handler = winch_handler };
+    struct sigaction sa = {.sa_handler = winch_handler};
     sigaction(SIGWINCH, &sa, NULL);
 
     terminal_register_cleanup();
 
-    CHECK_WARN_RET(tcgetattr(STDIN_FILENO, &og_term) == -1,,
-                   "tcgetattr failed");
+    CHECK_WARN_RET(tcgetattr(STDIN_FILENO, &og_term) == -1, , "tcgetattr failed");
 
     // Set up terminal for raw mode
     struct termios raw = og_term;
-    raw.c_lflag &= (tcflag_t)~(ECHO | ICANON);
+    raw.c_lflag &= (tcflag_t) ~(ECHO | ICANON);
 
     // Apply changes after draining output
-    CHECK_WARN_RET(tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1,,
-                   "setting term attr failed");
+    CHECK_WARN_RET(tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1, , "setting term attr failed");
 
     // Switch to the alternate screen buffer so we don't clobber the
     // user's scrollback, then hide the cursor and clear to theme colours.
-    tb_append_cstr(&cm->tb, "\033[?1049h");   // enter alternate screen
-    tb_append_cstr(&cm->tb, CURSOR_HIDE);     // hide cursor
+    tb_append_cstr(&cm->tb, "\033[?1049h"); // enter alternate screen
+    tb_append_cstr(&cm->tb, CURSOR_HIDE);   // hide cursor
 
-    draw_clear(&cm->tb, &cm->t);              // fill screen with theme bg/fg
+    draw_clear(&cm->tb, &cm->t); // fill screen with theme bg/fg
 
     tb_flush(&cm->tb);
 }
 
 void cmonkey_end(void)
 {
-    const char* cleanup = "\033[0m"          // hard attribute reset
-                          "\033[?25h"        // show cursor (was ?25h, which is correct)
-                          "\033[?1049l";     // leave alternate screen
+    const char* cleanup = "\033[0m"      // hard attribute reset
+                          "\033[?25h"    // show cursor (was ?25h, which is correct)
+                          "\033[?1049l"; // leave alternate screen
     write(STDOUT_FILENO, cleanup, strlen(cleanup));
 
     // Restore the saved terminal settings
@@ -126,10 +124,10 @@ void cmonkey_draw(cmonkey* cm)
 {
     // tb_reset(cm->tb);
     draw_clear(&cm->tb, &cm->t);
- 
+
     // tb_append_cstr(&cm->tb, "\033[H");
     tb_append_cstr(&cm->tb, cm->t.reset);
- 
+
     Box box = {cm->x, cm->y, 3, 5};
     draw_box(&cm->tb, box, &cm->t, &cm->c);
 
@@ -150,10 +148,10 @@ void cmonkey_run(cmonkey* cm)
 {
     while (!cm->quit) {
         timer_tick(&cm->timer);
- 
+
         cmonkey_update(cm);
         cmonkey_draw(cm);
- 
+
         timer_end_frame(&cm->timer);
         timer_sleep(&cm->timer);
     }
@@ -184,12 +182,12 @@ void winch_handler(int sig)
 
 
 // Signal handler to ensure cleanup on Ctrl+C, etc.
-static void signal_handler(int sig) 
+static void signal_handler(int sig)
 {
     // Reset attributes, show cursor, leave alternate screen
     const char* cleanup = "\033[0m\033[?25h\033[?1049l";
     write(STDOUT_FILENO, cleanup, strlen(cleanup));
-    
+
     // Restore terminal settings
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &og_term);
 
@@ -199,12 +197,12 @@ static void signal_handler(int sig)
 }
 
 // Register cleanup handlers
-static void terminal_register_cleanup(void) 
+static void terminal_register_cleanup(void)
 {
-    signal(SIGINT,  signal_handler);  // Ctrl+C
-    signal(SIGTERM, signal_handler);  // kill command
-    signal(SIGQUIT, signal_handler);  // Ctrl+'\'
-    signal(SIGWINCH, winch_handler);  // terminal resize
+    signal(SIGINT, signal_handler);  // Ctrl+C
+    signal(SIGTERM, signal_handler); // kill command
+    signal(SIGQUIT, signal_handler); // Ctrl+'\'
+    signal(SIGWINCH, winch_handler); // terminal resize
 }
 
 

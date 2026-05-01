@@ -10,7 +10,7 @@ typedef struct {
     struct timespec frame_start;
     struct timespec frame_end;
     // running deadline
-    struct timespec next_frame_time; 
+    struct timespec next_frame_time;
     float           target_dt;
     u8              target_fps;
     float           elapsed;

@@ -6,8 +6,8 @@
 
 typedef struct {
     char* data;
-    u32 len;
-    u32 cap;
+    u32   len;
+    u32   cap;
 } term_buf;
 
 

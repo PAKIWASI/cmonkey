@@ -17,22 +17,25 @@ typedef struct {
     cmonkey_timer  timer;
     u32            rows;
     u32            cols;
-    // testing
+    // testing ==========
     u32            x;
     u32            y;
     int            vx;
     int            vy;
-    //
+    // =================
     bool           quit;
 } cmonkey;
 
 
 // create the struct
 void cmonkey_create(cmonkey* cm, const char* wb_path, const char* theme_path, const char* conf_path);
+
 // destroy struct
 void cmonkey_destroy(cmonkey* cm);
+
 // setup terminal, get words, init system
 void cmonkey_begin(cmonkey* cm);
+
 // restore terminal etc
 void cmonkey_end(void);
 

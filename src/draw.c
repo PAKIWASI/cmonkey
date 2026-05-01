@@ -1,10 +1,8 @@
 #include "draw.h"
 #include "buffer.h"
 #include "config.h"
-#include "gen_vector_single.h"
 #include "wc_macros_single.h"
 #include "wordbank.h"
-
 
 
 
@@ -27,8 +25,7 @@ void draw_text(term_buf* b, u32 row, u32 col, const cmonkey_theme* t, const char
 }
 
 
-void draw_text_with_color(term_buf* b, u32 row, u32 col, const char* fg,
-                  const cmonkey_theme* t, const char* text)
+void draw_text_with_color(term_buf* b, u32 row, u32 col, const char* fg, const cmonkey_theme* t, const char* text)
 {
     // move cursor to row,col
     draw_move(b, row, col);
@@ -37,9 +34,13 @@ void draw_text_with_color(term_buf* b, u32 row, u32 col, const char* fg,
     draw_bg(b, t->text_bg);
 
     // override with explicit fg
-    if (fg && fg[0]) { draw_fg(b, fg); }
+    if (fg && fg[0]) {
+        draw_fg(b, fg);
+    }
     // or draw normal
-    else { draw_fg(b, t->text_fg); }
+    else {
+        draw_fg(b, t->text_fg);
+    }
 
     // draw the text
     tb_append_cstr(b, text);
@@ -48,7 +49,6 @@ void draw_text_with_color(term_buf* b, u32 row, u32 col, const char* fg,
     draw_theme_reset(b, t);
 }
 
-                                                    // TODO: just take border style
 void draw_box(term_buf* b, Box box, cmonkey_theme* t, cmonkey_conf* c)
 {
     // move
@@ -93,13 +93,12 @@ void draw_box(term_buf* b, Box box, cmonkey_theme* t, cmonkey_conf* c)
     draw_theme_reset(b, t);
 }
 
-void draw_words_in_box(term_buf* b, Box box, Queue* q, WordBank* wb,
-                       u32 num_words, const cmonkey_theme* t)
+void draw_words_in_box(term_buf* b, Box box, Queue* q, WordBank* wb, u32 num_words, const cmonkey_theme* t)
 {
     draw_bg(b, t->text_bg);
     draw_fg(b, t->text_fg);
 
-    u32 inner_w = box.w - 2;  // subtract borders
+    u32 inner_w  = box.w - 2; // subtract borders
     u32 line     = box.r + 1;
     u32 line_len = 1;
 
@@ -114,10 +113,8 @@ void draw_words_in_box(term_buf* b, Box box, Queue* q, WordBank* wb,
 
         draw_move(b, line, box.c + 1 + line_len);
         tb_append_n(b, wordbank_word_at(wb, w->idx), w->len);
-        line_len += w->len + 1;  // +1 for space
+        line_len += w->len + 1; // +1 for space
     }
 
     draw_theme_reset(b, t);
 }
-
-
