@@ -136,4 +136,25 @@ void draw_words_in_box(term_buf* b, Box box, Queue* q, WordBank* wb,
                        u32 num_words, const cmonkey_theme* t);
 
 
+// forward declare to avoid circular include (cmonkey.h includes draw.h)
+typedef struct cmonkey_test cmonkey_test;
+
+/*
+ * Draw the typing-test word field.
+ *
+ * Reads from test->typed[] starting at test->typed_base.
+ * Colours:
+ *   committed correct   → t->correct
+ *   committed incorrect → t->incorrect
+ *   current word        → char-by-char: correct/incorrect/cursor/dim
+ *   upcoming words      → t->text_dim
+ *
+ * Also advances test->typed_base so curr_word stays on the last line
+ * (bottom-anchored scroll, like MonkeyType).
+ *
+ * Non-destructive: does not touch the queue or wordbank structure.
+ */
+void draw_words_in_box_ex(term_buf* b, WordBank* wb, Box box,
+                          cmonkey_test* test, const cmonkey_theme* t);
+
 #endif // CMONKEY_DRAW

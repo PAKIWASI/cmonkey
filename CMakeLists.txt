@@ -44,6 +44,7 @@ set (SRC_FILES
     src/config.c
     src/cmonkey.c
     src/timer.c
+    src/input.c
 )
 
 add_executable(main
