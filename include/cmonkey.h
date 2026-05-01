@@ -8,6 +8,8 @@
 #include "config.h"
 
 
+
+
 typedef struct {
     WordBank       wb;
     Queue          q;
@@ -17,6 +19,7 @@ typedef struct {
     cmonkey_timer  timer;
     u32            rows;
     u32            cols;
+    CMONKEY_STATE  state;
     bool           quit;
 } cmonkey;
 

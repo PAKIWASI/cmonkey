@@ -4,7 +4,6 @@
 
 #include <asm-generic/ioctls.h>
 #include <signal.h>
-#include <stdio.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <termios.h>
@@ -116,10 +115,8 @@ void cmonkey_draw(cmonkey* cm)
     Box textbox = { 4, 4, 30, 70 };
 
     draw_box(&cm->tb, textbox, &cm->t, &cm->c);
-    draw_words_in_box(&cm->tb, textbox, &cm->q, &cm->wb, NUM_RAND_WORDS, &cm->t);
 
     tb_flush(&cm->tb);
-    getchar();
 }
 
 
