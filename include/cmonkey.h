@@ -18,14 +18,13 @@ typedef enum {
 } CMONKEY_STATE;
 
 typedef struct {
-    float   test_time;
-    float   elapsed_time;
-    genVec* typed;      // u32 word indices pulled from queue (history + current screen)
-    u32     typed_base; // idx of first word currently visible on screen
-    u32     curr_word;  // idx into typed[] of the word being typed
-    u32     curr_char;  // byte offset into that word
-    u32     correct;
-    u32     incorrect;
+    float  elapsed_time;
+    genVec typed;      // u32 word indices pulled from queue (history + current screen)
+    u32    typed_base; // idx of first word currently visible on screen
+    u32    curr_word;  // idx into typed[] of the word being typed
+    u32    curr_char;  // byte offset into that word
+    u32    correct;
+    u32    incorrect;
 } cmonkey_test;
 
 typedef struct {
@@ -39,6 +38,7 @@ typedef struct {
     u32           rows;
     u32           cols;
     CMONKEY_STATE state;
+    float         test_time; // current total test time
     bool          quit;
 } cmonkey;
 
@@ -63,6 +63,11 @@ void cmonkey_draw(cmonkey* cm);
 
 // frame-capped game loop
 void cmonkey_run(cmonkey* cm);
+
+
+// test stuff
+
+void cmonkey_test_new(cmonkey* cm);
 
 
 #endif // CMONKEY_H

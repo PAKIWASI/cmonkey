@@ -23,6 +23,7 @@ static struct termios og_term;
 
 #define FPS            60
 #define NUM_RAND_WORDS 200
+#define DEFAULT_TIME   30.F
 #define WORDS_AHEAD    40   // always keep this many words past curr_word in typed[]
 
 static void ensure_words(cmonkey* cm);
@@ -30,12 +31,11 @@ static void ensure_words(cmonkey* cm);
 
 void cmonkey_create(cmonkey* cm, const char* wb_path, const char* theme_path, const char* conf_path)
 {
+    // struct
     wordbank_create(&cm->wb, wb_path, NUM_RAND_WORDS);
     CHECK_FATAL(!cm->wb.words | !cm->wb.arena, "wordbank creation failed");
 
     queue_create_stk(&cm->incoming, (u64)NUM_RAND_WORDS * 2, sizeof(u32), NULL);
-
-    wordbank_random_words_in_queue(&cm->wb, &cm->incoming);
 
     CHECK_FATAL(!theme_load(&cm->t, theme_path), "theme load failed");
     CHECK_FATAL(!config_load(&cm->c, conf_path), "config load failed");
@@ -46,7 +46,17 @@ void cmonkey_create(cmonkey* cm, const char* wb_path, const char* theme_path, co
 
     timer_begin(&cm->timer, FPS);
 
+    cm->state = CMONKEY_WAITING;
+    cm->test_time = DEFAULT_TIME;
     cm->quit = false;
+
+    // init system
+
+    // load words
+    wordbank_random_words_in_queue(&cm->wb, &cm->incoming);
+
+    // load a test
+    cmonkey_test_new(cm);
 }
 
 void cmonkey_destroy(cmonkey* cm)
@@ -157,21 +167,6 @@ void set_term_dims(cmonkey* cm)
 }
 
 
-static void ensure_words(cmonkey* cm) {
-    cmonkey_test* te = &cm->test;
-    u32 curr = te->curr_word;
-    u32 loaded = (u32)genVec_size(te->typed);
-    
-    while (loaded < curr + WORDS_AHEAD) {
-        // refill queue if running low
-        if (queue_size(&cm->incoming) < 20) {
-            wordbank_random_words_in_queue(&cm->wb, &cm->incoming);
-        }
-        u32 idx = DEQUEUE(&cm->incoming, u32);
-        genVec_push(te->typed, (u8*)&idx);
-        loaded++;
-    }
-}
 
 // When the user resizes the terminal, the kernel sends a SIGWINCH signal.
 // We set a flag here and handle the resize in cmonkey_update().
@@ -204,6 +199,14 @@ static void terminal_register_cleanup(void)
     signal(SIGTERM, signal_handler); // kill command
     signal(SIGQUIT, signal_handler); // Ctrl+'\'
     signal(SIGWINCH, winch_handler); // terminal resize
+}
+
+
+void cmonkey_test_new(cmonkey* cm)
+{
+    memset(&cm->test, 0, sizeof(cmonkey_test));
+    genVec_init_stk(NUM_RAND_WORDS, sizeof(u32), NULL, &cm->test.typed);
+    cm->state = CMONKEY_WAITING;
 }
 
 
