@@ -118,3 +118,16 @@ void draw_words_in_box(term_buf* b, Box box, Queue* q, WordBank* wb, u32 num_wor
 
     draw_theme_reset(b, t);
 }
+
+void draw_words_in_box_ex(
+    term_buf* b,
+    WordBank* wb,
+    Box box,
+    genVec* typed,
+    u32 typed_base,
+    u32 num_to_draw,
+    u32 curr_word,
+    u32 curr_char
+);
+
+

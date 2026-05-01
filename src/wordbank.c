@@ -283,7 +283,7 @@ void wordbank_random_words_in_queue(WordBank* wb, Queue* q)
             }
             wb->cursor = 0;
         }
-        // enqueue(q, genVec_get_ptr(wb->words, wb->cursor++));
+
         enqueue(q, cast(i));
     }
 }

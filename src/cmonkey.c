@@ -1,6 +1,7 @@
 #include "cmonkey.h"
 #include "draw.h"
 #include "timer.h"
+#include "wc_macros_single.h"
 #include "wordbank.h"
 
 #include <asm-generic/ioctls.h>
@@ -11,9 +12,6 @@
 #include <unistd.h>
 
 
-#define NUM_RAND_WORDS 200
-#define FPS            60
-
 static volatile sig_atomic_t resize_flag = 0;
 static void                  set_term_dims(cmonkey* cm);
 static void                  winch_handler(int sig);
@@ -21,6 +19,13 @@ static void                  terminal_register_cleanup(void);
 
 // Store original terminal settings for restoration
 static struct termios og_term;
+
+
+#define FPS            60
+#define NUM_RAND_WORDS 200
+#define WORDS_AHEAD    40   // always keep this many words past curr_word in typed[]
+
+static void ensure_words(cmonkey* cm);
 
 
 void cmonkey_create(cmonkey* cm, const char* wb_path, const char* theme_path, const char* conf_path)
@@ -51,7 +56,7 @@ void cmonkey_destroy(cmonkey* cm)
     tb_destroy(&cm->tb);
 }
 
-void cmonkey_begin(cmonkey* cm)
+void cmonkey_init_term(cmonkey* cm)
 {
     // set SIGWINCH handler
     struct sigaction sa = {.sa_handler = winch_handler};
@@ -78,7 +83,7 @@ void cmonkey_begin(cmonkey* cm)
     tb_flush(&cm->tb);
 }
 
-void cmonkey_end(void)
+void cmonkey_end_term(void)
 {
     const char* cleanup = "\033[0m"      // hard attribute reset
                           "\033[?25h"    // show cursor (was ?25h, which is correct)
@@ -91,6 +96,8 @@ void cmonkey_end(void)
 
 void cmonkey_update(cmonkey* cm)
 {
+    ensure_words(cm);
+
     // Handle a pending terminal resize
     if (resize_flag) {
         resize_flag = 0;
@@ -105,13 +112,10 @@ void cmonkey_update(cmonkey* cm)
         // cm->tb = tb_create(cm->rows, cm->cols);
         // CHECK_FATAL(!cm->tb, "term_buf re-create after resize failed");
     }
-
 }
 
 void cmonkey_draw(cmonkey* cm)
 {
-    // draw_clear(&cm->tb, &cm->t);
-
     Box border = { 1, 1, cm->rows, cm->cols };
     draw_box(&cm->tb, border, &cm->t, &cm->c);
 
@@ -150,6 +154,23 @@ void set_term_dims(cmonkey* cm)
 
     cm->rows = ws.ws_row;
     cm->cols = ws.ws_col;
+}
+
+
+static void ensure_words(cmonkey* cm) {
+    cmonkey_test* te = &cm->test;
+    u32 curr = te->curr_word;
+    u32 loaded = (u32)genVec_size(te->typed);
+    
+    while (loaded < curr + WORDS_AHEAD) {
+        // refill queue if running low
+        if (queue_size(&cm->incoming) < 20) {
+            wordbank_random_words_in_queue(&cm->wb, &cm->incoming);
+        }
+        u32 idx = DEQUEUE(&cm->incoming, u32);
+        genVec_push(te->typed, (u8*)&idx);
+        loaded++;
+    }
 }
 
 // When the user resizes the terminal, the kernel sends a SIGWINCH signal.
