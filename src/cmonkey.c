@@ -1,6 +1,7 @@
 #include "cmonkey.h"
 #include "draw.h"
 #include "timer.h"
+#include "wordbank.h"
 
 #include <asm-generic/ioctls.h>
 #include <signal.h>
@@ -27,7 +28,9 @@ void cmonkey_create(cmonkey* cm, const char* wb_path, const char* theme_path, co
     wordbank_create(&cm->wb, wb_path, NUM_RAND_WORDS);
     CHECK_FATAL(!cm->wb.words | !cm->wb.arena, "wordbank creation failed");
 
-    queue_create_stk(&cm->q, (u64)NUM_RAND_WORDS * 2, sizeof(u32), NULL);
+    queue_create_stk(&cm->incoming, (u64)NUM_RAND_WORDS * 2, sizeof(u32), NULL);
+
+    wordbank_random_words_in_queue(&cm->wb, &cm->incoming);
 
     CHECK_FATAL(!theme_load(&cm->t, theme_path), "theme load failed");
     CHECK_FATAL(!config_load(&cm->c, conf_path), "config load failed");
@@ -44,7 +47,7 @@ void cmonkey_create(cmonkey* cm, const char* wb_path, const char* theme_path, co
 void cmonkey_destroy(cmonkey* cm)
 {
     wordbank_destroy(&cm->wb);
-    queue_destroy_stk(&cm->q);
+    queue_destroy_stk(&cm->incoming);
     tb_destroy(&cm->tb);
 }
 
@@ -113,8 +116,8 @@ void cmonkey_draw(cmonkey* cm)
     draw_box(&cm->tb, border, &cm->t, &cm->c);
 
     Box textbox = { 4, 4, 30, 70 };
-
     draw_box(&cm->tb, textbox, &cm->t, &cm->c);
+    draw_words_in_box(&cm->tb, textbox, &cm->incoming, &cm->wb, NUM_RAND_WORDS, &cm->t);
 
     tb_flush(&cm->tb);
 }

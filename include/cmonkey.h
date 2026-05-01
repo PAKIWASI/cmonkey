@@ -8,19 +8,36 @@
 #include "config.h"
 
 
-
+typedef enum {
+    // waiting to start test
+    CMONKEY_WAITING     = 0,
+    // test undergoing
+    CMONKEY_UNDERGOING,
+    // test finished, on result screen
+    CMONKEY_FINISHED,
+} CMONKEY_STATE;
 
 typedef struct {
-    WordBank       wb;
-    Queue          q;
-    term_buf       tb;
-    cmonkey_theme  t;
-    cmonkey_conf   c;
-    cmonkey_timer  timer;
-    u32            rows;
-    u32            cols;
-    CMONKEY_STATE  state;
-    bool           quit;
+    float test_time;    // total time for test
+    float elapsed_time;
+    // idx of words we have gone through
+    genVec typed;   // taken from queue, handy for going back to a word
+    u32   correct;  // how many correct words typed
+    u32   curr_char;// index into the current word we are typing
+} cmonkey_test;
+
+typedef struct {
+    WordBank        wb;         // source of all words
+    Queue           incoming;   // take words from front, add more to back
+    term_buf        tb;         // buffer to write ansi to, flushed to terminal
+    cmonkey_theme   t;          // user-set theme
+    cmonkey_conf    c;          // user settings
+    cmonkey_timer   timer;      // global timer for tui
+    cmonkey_test    test;       // rep. a single test
+    u32             rows;
+    u32             cols;
+    CMONKEY_STATE   state;
+    bool            quit;
 } cmonkey;
 
 
