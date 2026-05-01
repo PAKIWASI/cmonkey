@@ -39,11 +39,6 @@ void cmonkey_create(cmonkey* cm, const char* wb_path, const char* theme_path, co
 
     timer_begin(&cm->timer, FPS);
 
-    cm->x  = 1;
-    cm->y  = 1;
-    cm->vx = 1;
-    cm->vy = 1;
-
     cm->quit = false;
 }
 
@@ -109,37 +104,22 @@ void cmonkey_update(cmonkey* cm)
         // CHECK_FATAL(!cm->tb, "term_buf re-create after resize failed");
     }
 
-    cm->x += cm->vx;
-    if (cm->x >= cm->rows || cm->x <= 0) {
-        cm->vx *= -1;
-    }
-
-    cm->y += cm->vy;
-    if (cm->y >= cm->cols || cm->y <= 0) {
-        cm->vy *= -1;
-    }
 }
 
 void cmonkey_draw(cmonkey* cm)
 {
-    // tb_reset(cm->tb);
-    draw_clear(&cm->tb, &cm->t);
+    // draw_clear(&cm->tb, &cm->t);
 
-    // tb_append_cstr(&cm->tb, "\033[H");
-    tb_append_cstr(&cm->tb, cm->t.reset);
+    Box border = { 1, 1, cm->rows, cm->cols };
+    draw_box(&cm->tb, border, &cm->t, &cm->c);
 
-    Box box = {cm->x, cm->y, 3, 5};
-    draw_box(&cm->tb, box, &cm->t, &cm->c);
+    Box textbox = { 4, 4, 30, 70 };
 
-    char buf[128] = "";
-
-    snprintf(buf, 128, "FPS: %.2f   Delta: %.4f",
-             timer_get_fps(&cm->timer), timer_get_delta(&cm->timer));
-
-
-    draw_text(&cm->tb, 1, 1, &cm->t, buf);
+    draw_box(&cm->tb, textbox, &cm->t, &cm->c);
+    draw_words_in_box(&cm->tb, textbox, &cm->q, &cm->wb, NUM_RAND_WORDS, &cm->t);
 
     tb_flush(&cm->tb);
+    getchar();
 }
 
 

@@ -17,12 +17,6 @@ typedef struct {
     cmonkey_timer  timer;
     u32            rows;
     u32            cols;
-    // testing ==========
-    u32            x;
-    u32            y;
-    int            vx;
-    int            vy;
-    // =================
     bool           quit;
 } cmonkey;
 
