@@ -27,7 +27,7 @@ static struct termios og_term;
 
 #define FPS            60
 #define NUM_RAND_WORDS 200
-#define DEFAULT_TIME   30.f
+#define DEFAULT_TIME   60.f
 #define WORDS_AHEAD    40
 
 
