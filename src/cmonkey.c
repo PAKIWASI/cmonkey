@@ -29,6 +29,8 @@ static struct termios og_term;
 #define NUM_RAND_WORDS 200
 #define DEFAULT_TIME   60.f
 #define WORDS_AHEAD    40
+#define WORD_SPACING   2
+#define LINE_SPACING   2
 
 
 
@@ -288,7 +290,7 @@ void cmonkey_draw(cmonkey* cm)
     switch (cm->state) {
     case CMONKEY_WAITING:
     case CMONKEY_UNDERGOING: {
-        Box textbox = {8, 32, 12, (u32)(cm->cols - 64)};
+        Box textbox = {8, 32, 8, (u32)(cm->cols - 64)};
         draw_box(&cm->tb, textbox, &cm->t, &cm->c);
         draw_words_in_box_ex(&cm->tb, &cm->wb, textbox, &cm->test, &cm->t);
         break;
@@ -303,7 +305,6 @@ void cmonkey_draw(cmonkey* cm)
     draw_box(&cm->tb, timebox, &cm->t, &cm->c);
     draw_move(&cm->tb, 7, 34);
     tb_append_v(&cm->tb, "%.2f", cm->test.elapsed_time);
-
 
     tb_flush(&cm->tb);
 }

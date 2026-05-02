@@ -180,7 +180,7 @@ static void scroll_to_curr(cmonkey_test* test, WordBank* wb,
         drop_top_line(test, wb, inner_w);
     }
 }
- 
+
 void draw_words_in_box_ex(term_buf* b, WordBank* wb, Box box,
                           cmonkey_test* test, const cmonkey_theme* t)
 {

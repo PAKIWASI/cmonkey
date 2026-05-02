@@ -8,13 +8,13 @@
 
 typedef struct {
     char        ch[4]; // UTF-8 bytes (1-4), null padded, for later mulilangs
-    const char* fg;
+    const char* fg;    // points to theme's fg or any fg string
     const char* bg;
-    u8          attr; // bold/dim/underline bitmask
+    u8          attr; // bold/dim/underline bitmask for later
 } cell;
 
-
 typedef struct {
+    // flat arrays simulating matrices
     cell* front; // what's currently on the terminal
     cell* back;  // what we're drawing into this frame
     u32   rows;
