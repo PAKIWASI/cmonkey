@@ -173,7 +173,7 @@ static void scroll_to_curr(cmonkey_test* test, WordBank* wb,
     u32 middle = inner_h / 2;
 
     // Keep dropping the top line until curr_word is at or above middle
-    for (;;) {
+    while (1) {
         int line = layout_line_of(test, wb, test->typed_base,
                                   test->curr_word, inner_w, inner_h);
         if (line < 0 || (u32)line <= middle) { break; }

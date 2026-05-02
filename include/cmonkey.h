@@ -25,15 +25,14 @@ typedef enum {
 } WORD_STATE;
 
 
-// NOTE: tagged as 'struct cmonkey_test' so draw.h can forward-declare it
-// without pulling in this whole header (avoids circular include).
 typedef struct cmonkey_test {
+    // TODO: combine these into Word{ idx, state }
     genVec typed;           // u32 word-vec indices, in order of typing
     genVec word_states;     // WORD_STATE per committed word (parallel to typed[])
     float  elapsed_time;    // seconds since test started
     u32    typed_base;      // index into typed[] of first visible word (scroll)
     u32    curr_word;       // index into typed[] of word being typed right now
-    u32    curr_char;       // unused for now — reserved for future cursor logic
+    u32    curr_char;       // for future cursor logic
     u32    correct;         // committed correct word count
     u32    incorrect;       // committed incorrect word count
     char   curr_typed[128]; // what the user has typed for curr_word so far
@@ -43,7 +42,7 @@ typedef struct cmonkey_test {
 
 typedef struct {
     WordBank      wb;       // source of all words
-    Queue         incoming; // take words from front, add more to back
+    Queue         incoming; // queue of u32 idx from wb. Take words from front, add more to back
     term_buf      tb;       // buffer to write ansi to, flushed to terminal
     cmonkey_theme t;        // user-set theme
     cmonkey_conf  c;        // user settings
@@ -51,9 +50,9 @@ typedef struct {
     cmonkey_test  test;     // represents a single test
     u32           rows;
     u32           cols;
+    cmonkey_input inputs[32];
     CMONKEY_STATE state;
     float         test_time; // current total test time
-    cmonkey_input inputs[32];
     bool          quit;
 } cmonkey;
 

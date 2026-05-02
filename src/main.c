@@ -1,6 +1,6 @@
 #include "cmonkey.h"
 
-#define ENG         "english_1k.json"
+#define ENG         "english_450k.json"
 #define FOLDER_PATH "wordbanks/"
 #define CURR_FILE   (FOLDER_PATH ENG)
 

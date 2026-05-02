@@ -16,12 +16,13 @@
 
 
 static volatile sig_atomic_t resize_flag = 0;
-static void                  set_term_dims(cmonkey* cm);
-static void                  winch_handler(int sig);
-static void                  signal_handler(int sig);
-static void                  terminal_register_cleanup(void);
-static void                  test_refill_words(cmonkey* cm);
-static void                  cmonkey_handle_input(cmonkey* cm, cmonkey_input input);
+
+static void set_term_dims(cmonkey* cm);
+static void winch_handler(int sig);
+static void signal_handler(int sig);
+static void terminal_register_cleanup(void);
+static void test_refill_words(cmonkey* cm);
+static void cmonkey_handle_input(cmonkey* cm, cmonkey_input input);
 
 static struct termios og_term;
 
@@ -29,6 +30,7 @@ static struct termios og_term;
 #define NUM_RAND_WORDS 200
 #define DEFAULT_TIME   60.f
 #define WORDS_AHEAD    40
+// TODO:
 #define WORD_SPACING   2
 #define LINE_SPACING   2
 
@@ -71,11 +73,13 @@ void cmonkey_init_term(cmonkey* cm)
     sigaction(SIGWINCH, &sa, NULL);
     terminal_register_cleanup();
 
-    CHECK_WARN_RET(tcgetattr(STDIN_FILENO, &og_term) == -1, , "tcgetattr failed");
+    CHECK_WARN_RET(tcgetattr(STDIN_FILENO, &og_term) == -1,,
+                   "tcgetattr failed");
 
-    struct termios raw = og_term;
+    struct termios raw = og_term;   // preserve original state
     raw.c_lflag &= (tcflag_t) ~(ECHO | ICANON);
-    CHECK_WARN_RET(tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1, , "setting term attr failed");
+    CHECK_WARN_RET(tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1,,
+                   "setting term attr failed");
 
     // must be after raw mode is applied
     input_init();
@@ -88,12 +92,11 @@ void cmonkey_init_term(cmonkey* cm)
 
 void cmonkey_end_term(void)
 {
+    // show cursor, exit alt screen
     const char* cleanup = "\033[0m\033[?25h\033[?1049l";
     write(STDOUT_FILENO, cleanup, strlen(cleanup));
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &og_term);
 }
-
-
 
 void cmonkey_test_new(cmonkey* cm)
 {
@@ -134,8 +137,6 @@ static void test_refill_words(cmonkey* cm)
     }
 }
 
-
-
 static void handle_char(cmonkey* cm, char ch)
 {
     cmonkey_test* test = &cm->test;
@@ -151,8 +152,10 @@ static void handle_char(cmonkey* cm, char ch)
         Word*       w            = (Word*)genVec_get_ptr(cm->wb.words, word_vec_idx);
         const char* expected     = wordbank_word_at(&cm->wb, w->idx);
 
+        // TODO: no need to test per word, just do char by char check and a flag if word is correct
         // single strcmp — correct iff lengths match and every byte matches
-        WORD_STATE state = (test->curr_typed_len == w->len && strncmp(test->curr_typed, expected, w->len) == 0)
+        WORD_STATE state = (test->curr_typed_len == w->len &&
+            strncmp(test->curr_typed, expected, w->len) == 0)
                                ? WORD_CORRECT
                                : WORD_INCORRECT;
 
@@ -188,6 +191,7 @@ static void handle_backspace(cmonkey* cm)
     }
 }
 
+// TODO: doesnnot work
 static void handle_ctrl_backspace(cmonkey* cm)
 {
     cmonkey_test* test   = &cm->test;
@@ -231,7 +235,7 @@ static void cmonkey_handle_input(cmonkey* cm, cmonkey_input input)
         case INPUT_CTRL_BACKSPACE:
             handle_ctrl_backspace(cm);
             break;
-        case INPUT_ESCAPE: /* TODO: pause / quit prompt */
+        case INPUT_ESCAPE: // TODO: pause / quit prompt
             break;
         case INPUT_TAB:
             // restart
@@ -253,13 +257,13 @@ static void cmonkey_handle_input(cmonkey* cm, cmonkey_input input)
     }
 }
 
-
 void cmonkey_update(cmonkey* cm)
 {
     // tick elapsed time while test is running
     if (cm->state == CMONKEY_UNDERGOING) {
         cm->test.elapsed_time += cm->timer.elapsed;
         if (cm->test.elapsed_time >= cm->test_time) {
+            cm->test.elapsed_time = cm->test_time;  // it sometimes showed some milisec above
             cm->state = CMONKEY_FINISHED;
         }
     }
@@ -281,6 +285,7 @@ void cmonkey_update(cmonkey* cm)
 void cmonkey_draw(cmonkey* cm)
 {
     // TODO: need to get double buffering
+
     // clear to theme each frame so stale chars don't linger
     draw_clear(&cm->tb, &cm->t);
 
@@ -357,3 +362,4 @@ static void terminal_register_cleanup(void)
     signal(SIGQUIT, signal_handler);
     signal(SIGWINCH, winch_handler);
 }
+
