@@ -14,7 +14,7 @@ typedef struct {
 } cell;
 
 typedef struct {
-    // flat arrays simulating matrices
+    // flat arrays matrices
     cell* front; // what's currently on the terminal
     cell* back;  // what we're drawing into this frame
     u32   rows;
