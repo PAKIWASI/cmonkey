@@ -26,7 +26,8 @@ void draw_text(term_buf* b, u32 row, u32 col, const cmonkey_theme* t, const char
 }
 
 
-void draw_text_with_color(term_buf* b, u32 row, u32 col, const char* fg, const cmonkey_theme* t, const char* text)
+void draw_text_with_color(term_buf* b, u32 row, u32 col,
+                          const char* fg, const cmonkey_theme* t, const char* text)
 {
     // move cursor to row,col
     draw_move(b, row, col);

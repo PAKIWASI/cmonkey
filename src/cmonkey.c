@@ -69,15 +69,18 @@ void cmonkey_destroy(cmonkey* cm)
 
 void cmonkey_init_term(cmonkey* cm)
 {
+    // set callback to trigger resize flag
     struct sigaction sa = {.sa_handler = winch_handler};
     sigaction(SIGWINCH, &sa, NULL);
+
     terminal_register_cleanup();
 
     CHECK_WARN_RET(tcgetattr(STDIN_FILENO, &og_term) == -1,,
                    "tcgetattr failed");
 
     struct termios raw = og_term;   // preserve original state
-    raw.c_lflag &= (tcflag_t) ~(ECHO | ICANON);
+
+    raw.c_lflag &= (tcflag_t) ~(ECHO | ICANON); // set our own
     CHECK_WARN_RET(tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1,,
                    "setting term attr failed");
 
@@ -86,6 +89,7 @@ void cmonkey_init_term(cmonkey* cm)
 
     tb_append_cstr(&cm->tb, "\033[?1049h"); // enter alternate screen
     tb_append_cstr(&cm->tb, CURSOR_HIDE);
+
     draw_clear(&cm->tb, &cm->t);
     tb_flush(&cm->tb);
 }
@@ -95,7 +99,7 @@ void cmonkey_end_term(void)
     // show cursor, exit alt screen
     const char* cleanup = "\033[0m\033[?25h\033[?1049l";
     write(STDOUT_FILENO, cleanup, strlen(cleanup));
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &og_term);
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &og_term);   // set back original state
 }
 
 void cmonkey_test_new(cmonkey* cm)

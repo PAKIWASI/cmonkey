@@ -2,7 +2,6 @@
 #define SCREEN_H
 
 #include "buffer.h"
-#include "common_single.h"
 #include "config.h"
 
 

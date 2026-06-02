@@ -1,5 +1,6 @@
 #include "screen.h"
 #include "draw.h"
+
 #include <string.h>
 
 
@@ -9,13 +10,15 @@ void screen_flush(screen* s, term_buf* b, const cmonkey_theme* t)
     const char* last_bg = NULL;
     bool        pending_move = true;  // force move at first diff
 
-    for (u32 r = 0; r < s->rows; r++) {
-        for (u32 c = 0; c < s->cols; c++) {
+    for (u32 r = 0; r < s->rows; r++)
+    {
+        for (u32 c = 0; c < s->cols; c++)
+        {
             cell* back  = &s->back [(r * s->cols) + c];
             cell* front = &s->front[(r * s->cols) + c];
 
             // skip if identical
-            // TODO: 
+            // TODO:
             if (memcmp(back, front, sizeof(cell)) == 0) {
                 pending_move = true;  // next write needs a move
                 continue;
