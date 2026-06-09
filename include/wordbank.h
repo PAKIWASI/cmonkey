@@ -18,7 +18,7 @@ typedef struct {
     // we give the user indexes into words vec at back of queue
 } WordBank;
 
-// TODO: 
+// TODO:
 // 2. ARABIC is loading correctly with setlocate(), idk about cursor movement
 
 // Load entire JSON word list into memory.

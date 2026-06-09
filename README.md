@@ -8,4 +8,4 @@ Written in C11 without any libraries (writes raw ansi escape codes)
 
 # Acknowledgements
     jsmn.h - JSON tokenising
-    WCtoolkit - My C datastructures and utilities
+    WCtoolkit - My C data structures and utilities

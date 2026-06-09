@@ -26,6 +26,7 @@ static void cmonkey_handle_input(cmonkey* cm, cmonkey_input input);
 
 static struct termios og_term;
 
+
 #define FPS            60
 #define NUM_RAND_WORDS 200
 #define DEFAULT_TIME   60.f
@@ -75,8 +76,7 @@ void cmonkey_init_term(cmonkey* cm)
 
     terminal_register_cleanup();
 
-    CHECK_WARN_RET(tcgetattr(STDIN_FILENO, &og_term) == -1,,
-                   "tcgetattr failed");
+    CHECK_WARN_RET(tcgetattr(STDIN_FILENO, &og_term) == -1,,"tcgetattr failed");
 
     struct termios raw = og_term;   // preserve original state
 

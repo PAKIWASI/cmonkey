@@ -165,7 +165,7 @@ void wordbank_create(WordBank* wb, const char* filename, u32 num_random_words)
     }
 
     // Size pass: walk tokens starting at start_offset-th matching word, wrapping around.
-    // Once we wrap, skipped is set to start_offset so we no longer skip anything —
+    // Once we wrap, skipped is set to start_offset so we no longer skip anything
     // the wrapped portion starts at the beginning of the array and all words are valid.
     u64  bytes_needed = 0;
     u32  skipped      = 0;
@@ -261,9 +261,9 @@ void wordbank_destroy(WordBank* wb)
 
 
 /*
-    O(num) — iterating num times, doing a swap and an enqueue each iteration
+    Amortized O(num): iterating num times, doing a swap and an enqueue each iteration
     The reshuffle branch is O(total) but only fires when cursor >= total,
-    which happens once every total/num calls Amortized : O(num)
+    which happens once every total/num calls
 */
 void wordbank_random_words_in_queue(WordBank* wb, Queue* q)
 {

@@ -1,8 +1,9 @@
 #ifndef CMONKEY_CONFIG
 #define CMONKEY_CONFIG
 
-
 #include <stdbool.h>
+
+
 #define COLOR_ESC_MAX 32      // enough for "\033[38;2;255;255;255m"
 
 

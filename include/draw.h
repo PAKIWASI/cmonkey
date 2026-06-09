@@ -77,16 +77,16 @@ static inline void draw_clear(term_buf* b, const cmonkey_theme* t)
 }
 
 // text attributes
-static inline void draw_bold_on(term_buf* b)      { tb_append_cstr(b, BOLD_ON);       }
-static inline void draw_bold_off(term_buf* b)     { tb_append_cstr(b, BOLD_OFF);      }
-static inline void draw_dim_on(term_buf* b)       { tb_append_cstr(b, DIM_ON);        }
-static inline void draw_dim_off(term_buf* b)      { tb_append_cstr(b, DIM_OFF);       }
-static inline void draw_italic_on(term_buf* b)    { tb_append_cstr(b, ITALIC_ON);     }
-static inline void draw_italic_off(term_buf* b)   { tb_append_cstr(b, ITALIC_OFF);    }
-static inline void draw_underline_on(term_buf* b) { tb_append_cstr(b, UNDERLINE_ON);  }
-static inline void draw_underline_off(term_buf* b){ tb_append_cstr(b, UNDERLINE_OFF); }
-static inline void draw_strike_on(term_buf* b)    { tb_append_cstr(b, STRIKE_ON);     }
-static inline void draw_strike_off(term_buf* b)   { tb_append_cstr(b, STRIKE_OFF);    }
+static inline void draw_bold_on(term_buf* b)       { tb_append_cstr(b, BOLD_ON);       }
+static inline void draw_bold_off(term_buf* b)      { tb_append_cstr(b, BOLD_OFF);      }
+static inline void draw_dim_on(term_buf* b)        { tb_append_cstr(b, DIM_ON);        }
+static inline void draw_dim_off(term_buf* b)       { tb_append_cstr(b, DIM_OFF);       }
+static inline void draw_italic_on(term_buf* b)     { tb_append_cstr(b, ITALIC_ON);     }
+static inline void draw_italic_off(term_buf* b)    { tb_append_cstr(b, ITALIC_OFF);    }
+static inline void draw_underline_on(term_buf* b)  { tb_append_cstr(b, UNDERLINE_ON);  }
+static inline void draw_underline_off(term_buf* b) { tb_append_cstr(b, UNDERLINE_OFF); }
+static inline void draw_strike_on(term_buf* b)     { tb_append_cstr(b, STRIKE_ON);     }
+static inline void draw_strike_off(term_buf* b)    { tb_append_cstr(b, STRIKE_OFF);    }
 
 // theme colours: pass the pre-built escape string from cmonkey_theme
 static inline void draw_fg(term_buf* b, const char* escape) { tb_append_cstr(b, escape); }

@@ -192,7 +192,9 @@ void draw_words_in_box_ex(term_buf* b, WordBank* wb, Box box,
     draw_bg(b, t->text_bg[0] ? t->text_bg : t->main_bg);
     for (u32 r = 0; r < inner_h; r++) {
         draw_move(b, box.r + 1 + r, box.c + 1);
-        for (u32 c2 = 0; c2 < inner_w; c2++) { tb_append_n(b, " ", 1); }
+        for (u32 c2 = 0; c2 < inner_w; c2++) {
+            tb_append_n(b, " ", 1);
+        }
     }
  
     // scroll so curr_word is on the last inner line
