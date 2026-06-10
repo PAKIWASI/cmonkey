@@ -4,7 +4,6 @@
 #include "draw.h"
 #include "input.h"
 #include "timer.h"
-#include "wc_macros_single.h"
 #include "wordbank.h"
 
 #include <asm-generic/ioctls.h>
@@ -64,8 +63,7 @@ void cmonkey_destroy(cmonkey* cm)
     wordbank_destroy(&cm->wb);
     queue_destroy_stk(&cm->incoming);
     tb_destroy(&cm->tb);
-    genVec_destroy_stk(&cm->test.typed);
-    genVec_destroy_stk(&cm->test.word_states);
+    genVec_destroy_stk(&cm->test.words);
 }
 
 void cmonkey_init_term(cmonkey* cm)
@@ -104,105 +102,37 @@ void cmonkey_end_term(void)
 
 void cmonkey_test_new(cmonkey* cm)
 {
-    // destroy old vecs if they exist
-    genVec_destroy_stk(&cm->test.typed);
-    genVec_destroy_stk(&cm->test.word_states);
 
-    memset(&cm->test, 0, sizeof(cmonkey_test));
-
-    genVec_init_stk(NUM_RAND_WORDS, sizeof(u32), NULL, &cm->test.typed);
-    genVec_init_stk(NUM_RAND_WORDS, sizeof(WORD_STATE), NULL, &cm->test.word_states);
-
-    cm->state = CMONKEY_WAITING;
-
-    // pre-load the initial horizon so draw has words immediately
-    test_refill_words(cm);
 }
 
 // Keep typed[] topped up so there are always WORDS_AHEAD words past curr_word.
 static void test_refill_words(cmonkey* cm)
 {
     cmonkey_test* test    = &cm->test;
-    u32           total   = (u32)test->typed.size;
+    u32           total   = (u32)test->words.size;
     u32           horizon = test->curr_word + WORDS_AHEAD;
 
     while (total < horizon) {
-        if (queue_size(&cm->incoming) < 10) {
-            wordbank_random_words_in_queue(&cm->wb, &cm->incoming);
-        }
 
-        u32 idx = DEQUEUE(&cm->incoming, u32);
-        genVec_push(&test->typed, cast(idx));
-
-        WORD_STATE st = WORD_PENDING;
-        genVec_push(&test->word_states, cast(st));
-
-        total++;
     }
 }
 
 static void handle_char(cmonkey* cm, char ch)
 {
-    cmonkey_test* test = &cm->test;
 
-    if (ch == ' ') {
-        // ignore leading space (nothing typed yet)
-        if (test->curr_typed_len == 0) {
-            return;
-        }
-
-        // look up the word the user was supposed to type
-        u32         word_vec_idx = *(u32*)genVec_get_ptr(&test->typed, test->curr_word);
-        Word*       w            = (Word*)genVec_get_ptr(cm->wb.words, word_vec_idx);
-        const char* expected     = wordbank_word_at(&cm->wb, w->idx);
-
-        // TODO: no need to test per word, just do char by char check and a flag if word is correct
-        // single strcmp — correct iff lengths match and every byte matches
-        WORD_STATE state = (test->curr_typed_len == w->len &&
-            strncmp(test->curr_typed, expected, w->len) == 0)
-                               ? WORD_CORRECT
-                               : WORD_INCORRECT;
-
-        *(WORD_STATE*)genVec_get_ptr(&test->word_states, test->curr_word) = state;
-
-        if (state == WORD_CORRECT) {
-            test->correct++;
-        } else {
-            test->incorrect++;
-        }
-
-        test->curr_word++;
-        test->curr_typed_len = 0;
-        test->curr_typed[0]  = '\0';
-
-        test_refill_words(cm);
-        return;
-    }
-
-    // normal printable: append up to buffer limit
-    // allow typing past word length (it'll just show as all-wrong on commit)
-    if (test->curr_typed_len < (u32)(sizeof(test->curr_typed) - 1)) {
-        test->curr_typed[test->curr_typed_len++] = ch;
-        test->curr_typed[test->curr_typed_len]   = '\0';
-    }
 }
 
 static void handle_backspace(cmonkey* cm)
 {
-    cmonkey_test* test = &cm->test;
-    if (test->curr_typed_len > 0) {
-        test->curr_typed[--test->curr_typed_len] = '\0';
-    }
+
 }
 
-// TODO: doesnnot work
 static void handle_ctrl_backspace(cmonkey* cm)
 {
-    cmonkey_test* test   = &cm->test;
-    test->curr_typed_len = 0;
-    test->curr_typed[0]  = '\0';
+
 }
 
+// TODO: test this
 static void cmonkey_handle_input(cmonkey* cm, cmonkey_input input)
 {
     // Ctrl+C always quits regardless of state
@@ -282,7 +212,7 @@ void cmonkey_update(cmonkey* cm)
     if (resize_flag) {
         resize_flag = 0;
         set_term_dims(cm);
-        // TODO: tb resize if new dims exceed original allocation
+        // TODO: tb resize if new dims exceed original allocation ?
     }
 }
 

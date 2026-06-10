@@ -26,12 +26,10 @@ typedef enum {
 
 
 typedef struct cmonkey_test {
-    // TODO: combine these into Word{ idx, state }
-    genVec typed;           // u32 word-vec indices, in order of typing
-    genVec word_states;     // WORD_STATE per committed word (parallel to typed[])
+    genVec words;           // genVec of Word {idx, state}
     float  elapsed_time;    // seconds since test started
-    u32    typed_base;      // index into typed[] of first visible word (scroll)
-    u32    curr_word;       // index into typed[] of word being typed right now
+    u32    typed_base;      // index into words[] of first visible word (scroll)
+    u32    curr_word;       // index into words[] of word being typed right now
     u32    curr_char;       // for future cursor logic
     u32    correct;         // committed correct word count
     u32    incorrect;       // committed incorrect word count

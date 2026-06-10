@@ -1,9 +1,9 @@
 #include "input.h"
 #include "common_single.h"
 
-#include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
+
 
 
 void input_init(void)
@@ -18,6 +18,7 @@ void input_init(void)
     }
 }
 
+
 int input_poll(cmonkey_input* out, int max_inputs)
 {
     int count = 0;
@@ -27,22 +28,23 @@ int input_poll(cmonkey_input* out, int max_inputs)
 
         if (n <= 0) {
             // EAGAIN / EWOULDBLOCK = nothing in the pipe this frame, not an error
-            if (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) { break; }
+            // if (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) { break; }
             // actual EOF or error — still break, caller doesn't need to know
             break;
         }
 
         cmonkey_input inp = {0};
 
-        if      (c == 127)           { inp.type = INPUT_BACKSPACE;       }
-        else if (c == 23)            { inp.type = INPUT_CTRL_BACKSPACE;  } // Ctrl+W
-        else if (c == 27)            { inp.type = INPUT_ESCAPE;          } // ESC
-        else if (c == 9)             { inp.type = INPUT_TAB;             } // Tab
-        else if (c == 3)             { inp.type = INPUT_CTRL_C;          } // Ctrl+C
-        else if (c >= 32 && c < 127) {
+        if      (c == 127)           { inp.type = INPUT_BACKSPACE;      }
+        else if (c == 23)            { inp.type = INPUT_CTRL_BACKSPACE; } // Ctrl+W
+        else if (c == 27)            { inp.type = INPUT_ESCAPE;         } // ESC
+        else if (c == 9)             { inp.type = INPUT_TAB;            } // Tab
+        else if (c == 3)             { inp.type = INPUT_CTRL_C;         } // Ctrl+C
+        else if (c >= 32 && c < 127) {  // valid ascii characters (a-z, A-Z, 0-9, normal symbols)
             inp.type = INPUT_CHAR;
             inp.ch   = (char)c;
         }
+
         // everything else (arrows, F-keys, multi-byte escapes): silently drop
 
         // only append if we actually mapped it to something

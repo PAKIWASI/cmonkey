@@ -21,7 +21,7 @@
 #define BOLD_ON       ESC "1m"
 #define BOLD_OFF      ESC "22m"
 #define DIM_ON        ESC "2m"
-#define DIM_OFF       ESC "22m"      // same as bold off
+#define DIM_OFF       ESC "22m"
 #define ITALIC_ON     ESC "3m"
 #define ITALIC_OFF    ESC "23m"
 #define UNDERLINE_ON  ESC "4m"
@@ -34,6 +34,7 @@
 // cursor visibility
 #define CURSOR_HIDE   ESC "?25l"
 #define CURSOR_SHOW   ESC "?25h"
+
 
 /*
 clear screen + move home
@@ -63,7 +64,7 @@ static inline void draw_reset(term_buf* b)
     tb_append_cstr(b, RESET);
 }
 
-// theme reset: clears attributes then re-applies theme's main fg+bg
+// clears attributes then re-applies theme's main fg+bg
 static inline void draw_theme_reset(term_buf* b, const cmonkey_theme* t)
 {
     tb_append_cstr(b, t->reset);
@@ -91,6 +92,7 @@ static inline void draw_strike_off(term_buf* b)    { tb_append_cstr(b, STRIKE_OF
 // theme colours: pass the pre-built escape string from cmonkey_theme
 static inline void draw_fg(term_buf* b, const char* escape) { tb_append_cstr(b, escape); }
 static inline void draw_bg(term_buf* b, const char* escape) { tb_append_cstr(b, escape); }
+
 
 // TODO: inner for loop is a waste
 static inline void fill_box_bg(term_buf* b, Box box, const char* bg)
@@ -121,7 +123,7 @@ void draw_text_with_color(term_buf* b, u32 row, u32 col, const char* fg,
 
 
 /*
- * Draw a box at row, col of size h, w
+ * Draw a box at coords (row, col) of size h, w
  * takes optional theme and border stlye
  * otherwise use default
  * resets aftewards with theme
@@ -130,7 +132,7 @@ void draw_box(term_buf* b, Box box, cmonkey_theme* t, cmonkey_conf* c);
 
 /*
     knows the box's boundry so warps words to the next line
-    NOTE: this func is distructive
+    NOTE: this func is distructive, the words taken by it are dropped afterwards
 */
 void draw_words_in_box(term_buf* b, Box box, Queue* q, WordBank* wb,
                        u32 num_words, const cmonkey_theme* t);
