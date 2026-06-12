@@ -108,13 +108,7 @@ void cmonkey_test_new(cmonkey* cm)
 // Keep typed[] topped up so there are always WORDS_AHEAD words past curr_word.
 static void test_refill_words(cmonkey* cm)
 {
-    cmonkey_test* test    = &cm->test;
-    u32           total   = (u32)test->words.size;
-    u32           horizon = test->curr_word + WORDS_AHEAD;
 
-    while (total < horizon) {
-
-    }
 }
 
 static void handle_char(cmonkey* cm, char ch)
@@ -231,7 +225,7 @@ void cmonkey_draw(cmonkey* cm)
     case CMONKEY_UNDERGOING: {
         Box textbox = {8, 32, 8, (u32)(cm->cols - 64)};
         draw_box(&cm->tb, textbox, &cm->t, &cm->c);
-        draw_words_in_box_ex(&cm->tb, &cm->wb, textbox, &cm->test, &cm->t);
+        // draw_words_in_box_ex(&cm->tb, &cm->wb, textbox, &cm->test, &cm->t);
         break;
     }
     case CMONKEY_FINISHED:
