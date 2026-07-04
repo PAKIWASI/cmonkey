@@ -8,6 +8,8 @@
 #include "input.h"
 #include "wordbank.h"
 
+#define MAX_TYPED_SIZE 128
+
 
 typedef enum {
     // waiting to start test
@@ -33,7 +35,7 @@ typedef struct cmonkey_test {
     u32    curr_char;       // for future cursor logic
     u32    correct;         // committed correct word count
     u32    incorrect;       // committed incorrect word count
-    char   curr_typed[128]; // what the user has typed for curr_word so far
+    char   curr_typed[MAX_TYPED_SIZE]; // what the user has typed for curr_word so far
     u32    curr_typed_len;
 } cmonkey_test;
 
@@ -48,7 +50,8 @@ typedef struct {
     cmonkey_test  test;     // represents a single test
     u32           rows;
     u32           cols;
-    cmonkey_input inputs[32];
+    cmonkey_input inputs[MAX_INPUTS];   // storage for each frame's inputs
+    u32 input_count;                    // how many inputs captured this frame
     CMONKEY_STATE state;
     float         test_time; // current total test time
     bool          quit;

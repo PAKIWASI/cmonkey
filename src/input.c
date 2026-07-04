@@ -8,51 +8,66 @@
 
 void input_init(void)
 {
+    // F_GETFL returns the file access mode and the file status flags
     int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
     if (flags == -1) {
         WARN("fcntl F_GETFL failed");
         return;
     }
-    if (fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK) == -1) {
+    // F_SETFL sets the file status flags to the value specified by arg
+    if (fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK) == -1) {   // whatever the flags were, plus O_NONBLOCK
         WARN("fcntl F_SETFL O_NONBLOCK failed");
     }
 }
 
-
-int input_poll(cmonkey_input* out, int max_inputs)
+static cmonkey_input process_char(unsigned char ch)
 {
-    int count = 0;
-    while (count < max_inputs) {
-        u8      c;
-        ssize_t n = read(STDIN_FILENO, &c, 1);
-
-        if (n <= 0) {
-            // EAGAIN / EWOULDBLOCK = nothing in the pipe this frame, not an error
-            // if (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) { break; }
-            // actual EOF or error — still break, caller doesn't need to know
+    cmonkey_input result = {ACTION_NONE, 0};
+    
+    switch (ch) {
+        case 3:   // Ctrl-C
+            result.action = ACTION_END;
             break;
-        }
+        case 9:   // Tab
+            result.action = ACTION_RESTART;
+            break;
+        case 127: // Backspace
+        case 8:   // Backspace (alternate)
+            result.action = ACTION_BACKSPACE;
+            break;
+        case 23:  // Ctrl-W
+            result.action = ACTION_DEL_WORD;
+            break;
+        default:
+            // Printable characters
+            if (ch >= 32 && ch <= 126) {
+                result.action = ACTION_CHAR;
+                result.ch = (char)ch;
+            }
+            break;
+    }
+    
+    return result;
+}
 
-        cmonkey_input inp = {0};
-
-        if      (c == 127)           { inp.type = INPUT_BACKSPACE;      }
-        else if (c == 23)            { inp.type = INPUT_CTRL_BACKSPACE; } // Ctrl+W
-        else if (c == 27)            { inp.type = INPUT_ESCAPE;         } // ESC
-        else if (c == 9)             { inp.type = INPUT_TAB;            } // Tab
-        else if (c == 3)             { inp.type = INPUT_CTRL_C;         } // Ctrl+C
-        else if (c >= 32 && c < 127) {  // valid ascii characters (a-z, A-Z, 0-9, normal symbols)
-            inp.type = INPUT_CHAR;
-            inp.ch   = (char)c;
-        }
-
-        // everything else (arrows, F-keys, multi-byte escapes): silently drop
-
-        // only append if we actually mapped it to something
-        if (inp.type != INPUT_NONE) {
-            out[count++] = inp;
+u32 input_read_all(cmonkey_input* buffer)
+{
+    unsigned char raw[MAX_INPUTS * 2];
+    ssize_t n = read(STDIN_FILENO, raw, sizeof(raw));
+    
+    if (n <= 0) {
+        return 0;
+    }
+    
+    u32 count = 0;
+    for (ssize_t i = 0; i < n && count < MAX_INPUTS; i++) {
+        cmonkey_input input = process_char(raw[i]);
+        if (input.action != ACTION_NONE) {
+            buffer[count++] = input;
         }
     }
     return count;
 }
+
 
 

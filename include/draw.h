@@ -141,7 +141,7 @@ void draw_words_in_box(term_buf* b, Box box, Queue* q, WordBank* wb,
 // forward declare to avoid circular include (cmonkey.h includes draw.h)
 typedef struct cmonkey_test cmonkey_test;
 
-/*
+/* TODO:
  * Draw the typing-test word field.
  *
  * Reads from test->typed[] starting at test->typed_base.

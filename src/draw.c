@@ -14,7 +14,7 @@ void draw_text(term_buf* b, u32 row, u32 col, const cmonkey_theme* t, const char
     // draw text bg
     draw_bg(b, t->text_bg);
 
-    // draw text fb
+    // draw text fg
     draw_fg(b, t->text_fg);
 
     // draw the text

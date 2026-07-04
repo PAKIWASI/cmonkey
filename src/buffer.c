@@ -1,5 +1,4 @@
 #include "buffer.h"
-#include "common_single.h"
 
 #include <stdarg.h>
 #include <stdlib.h>

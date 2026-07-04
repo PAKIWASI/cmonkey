@@ -1,27 +1,29 @@
 #ifndef INPUT_H
 #define INPUT_H
 
+#include "common_single.h"
+
+#define MAX_INPUTS 32
 
 typedef enum {
-    INPUT_NONE = 0,
-    INPUT_CHAR,           // printable character
-    INPUT_BACKSPACE,      // delete last char
-    INPUT_CTRL_BACKSPACE, // delete whole current word (Ctrl+W)
-    INPUT_ESCAPE,         // quit / go back
-    INPUT_TAB,            // restart test
-    INPUT_CTRL_C,         // boom
-} INPUT_TYPE;
+    ACTION_NONE = 0,
+    ACTION_CHAR,
+    ACTION_BACKSPACE,
+    ACTION_DEL_WORD,
+    ACTION_RESTART,
+    ACTION_END,
+} ACTION;
 
 typedef struct {
-    INPUT_TYPE type;
-    char       ch; // valid only when type == INPUT_CHAR
+    ACTION action;
+    char   ch;      // valid only for ACTION_CHAR
 } cmonkey_input;
 
 // Call once after raw mode is set — makes stdin non-blocking.
 void input_init(void);
 
-// Drain all bytes available this frame into out[0..max_inputs).
-// Returns number of inputs written. Returns 0 when nothing is pending.
-int input_poll(cmonkey_input* out, int max_inputs);
+// Read ALL available input, fill the provided array, return count
+// Returns number of valid inputs read (max MAX_INPUTS)
+u32 input_read_all(cmonkey_input* buffer);
 
 #endif // INPUT_H

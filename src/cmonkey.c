@@ -31,8 +31,8 @@ static struct termios og_term;
 #define DEFAULT_TIME   60.f
 #define WORDS_AHEAD    40
 // TODO:
-#define WORD_SPACING   2
-#define LINE_SPACING   2
+#define WORD_SPACING 2
+#define LINE_SPACING 2
 
 
 
@@ -74,22 +74,21 @@ void cmonkey_init_term(cmonkey* cm)
 
     terminal_register_cleanup();
 
-    CHECK_WARN_RET(tcgetattr(STDIN_FILENO, &og_term) == -1,,"tcgetattr failed");
+    CHECK_WARN_RET(tcgetattr(STDIN_FILENO, &og_term) == -1, , "tcgetattr failed");
 
-    struct termios raw = og_term;   // preserve original state
+    struct termios raw = og_term; // preserve original state
 
     raw.c_lflag &= (tcflag_t) ~(ECHO | ICANON); // set our own
-    CHECK_WARN_RET(tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1,,
-                   "setting term attr failed");
+    CHECK_WARN_RET(tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1, , "setting term attr failed");
 
     // must be after raw mode is applied
     input_init();
 
     tb_append_cstr(&cm->tb, "\033[?1049h"); // enter alternate screen
-    tb_append_cstr(&cm->tb, CURSOR_HIDE);
+    tb_append_cstr(&cm->tb, CURSOR_HIDE);   // we don't use the actual cursor
 
-    draw_clear(&cm->tb, &cm->t);
-    tb_flush(&cm->tb);
+    draw_clear(&cm->tb, &cm->t); // clear screen with theme
+    tb_flush(&cm->tb);           // send the commands
 }
 
 void cmonkey_end_term(void)
@@ -97,90 +96,46 @@ void cmonkey_end_term(void)
     // show cursor, exit alt screen
     const char* cleanup = "\033[0m\033[?25h\033[?1049l";
     write(STDOUT_FILENO, cleanup, strlen(cleanup));
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &og_term);   // set back original state
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &og_term); // set back original state
 }
 
-void cmonkey_test_new(cmonkey* cm)
-{
-
-}
+void cmonkey_test_new(cmonkey* cm) {}
 
 // Keep typed[] topped up so there are always WORDS_AHEAD words past curr_word.
-static void test_refill_words(cmonkey* cm)
-{
+static void test_refill_words(cmonkey* cm) {}
 
-}
 
-static void handle_char(cmonkey* cm, char ch)
-{
-
-}
-
-static void handle_backspace(cmonkey* cm)
-{
-
-}
-
-static void handle_ctrl_backspace(cmonkey* cm)
-{
-
-}
-
-// TODO: test this
 static void cmonkey_handle_input(cmonkey* cm, cmonkey_input input)
 {
-    // Ctrl+C always quits regardless of state
-    if (input.type == INPUT_CTRL_C) {
+    switch (input.action) {
+    case ACTION_CHAR:
+        // Handle typed character
+        if (cm->state == CMONKEY_UNDERGOING) {
+            // ... add char to current word ...
+        }
+        break;
+
+    case ACTION_BACKSPACE:
+        // Handle backspace
+        // ... delete last char ...
+        break;
+
+    case ACTION_DEL_WORD:
+        // Handle Ctrl-W
+        // ... delete current word ...
+        break;
+
+    case ACTION_RESTART:
+        // Handle Tab
+        cmonkey_test_new(cm);
+        break;
+
+    case ACTION_END:
         cm->quit = true;
-        return;
-    }
-
-    switch (cm->state) {
-
-    case CMONKEY_WAITING:
-        // ESC/Tab on waiting screen: nothing yet
-        if (input.type == INPUT_ESCAPE) {
-            cm->quit = true;
-            return;
-        }
-        // any real keypress starts the test
-        if (input.type == INPUT_CHAR) {
-            cm->state = CMONKEY_UNDERGOING;
-            // start timer here — elapsed_time counts up from 0
-            cm->test.elapsed_time = 0.f;
-            handle_char(cm, input.ch);
-        }
         break;
 
-    case CMONKEY_UNDERGOING:
-        switch (input.type) {
-        case INPUT_CHAR:
-            handle_char(cm, input.ch);
-            break;
-        case INPUT_BACKSPACE:
-            handle_backspace(cm);
-            break;
-        case INPUT_CTRL_BACKSPACE:
-            handle_ctrl_backspace(cm);
-            break;
-        case INPUT_ESCAPE: // TODO: pause / quit prompt
-            break;
-        case INPUT_TAB:
-            // restart
-            wordbank_random_words_in_queue(&cm->wb, &cm->incoming);
-            cmonkey_test_new(cm);
-            break;
-        default:
-            break;
-        }
-        break;
-
-    case CMONKEY_FINISHED:
-        // any key on result screen restarts
-        if (input.type == INPUT_TAB || input.type == INPUT_ESCAPE) {
-            wordbank_random_words_in_queue(&cm->wb, &cm->incoming);
-            cmonkey_test_new(cm);
-        }
+    case ACTION_NONE:
+    default:
         break;
     }
 }
@@ -191,14 +146,16 @@ void cmonkey_update(cmonkey* cm)
     if (cm->state == CMONKEY_UNDERGOING) {
         cm->test.elapsed_time += cm->timer.elapsed;
         if (cm->test.elapsed_time >= cm->test_time) {
-            cm->test.elapsed_time = cm->test_time;  // it sometimes showed some milisec above
-            cm->state = CMONKEY_FINISHED;
+            cm->test.elapsed_time = cm->test_time; // it sometimes showed some milisec above
+            cm->state             = CMONKEY_FINISHED;
         }
     }
 
-    // drain all pending input this frame
-    int n = input_poll(cm->inputs, 32);
-    for (int i = 0; i < n; i++) {
+    // Read ALL pending input into cm->inputs
+    cm->input_count = input_read_all(cm->inputs);
+
+    // Process each input
+    for (u32 i = 0; i < cm->input_count; i++) {
         cmonkey_handle_input(cm, cm->inputs[i]);
     }
 
@@ -234,7 +191,7 @@ void cmonkey_draw(cmonkey* cm)
         break;
     }
 
-    Box timebox = { 6, 33, 3, 10 };
+    Box timebox = {6, 33, 3, 10};
     draw_box(&cm->tb, timebox, &cm->t, &cm->c);
     draw_move(&cm->tb, 7, 34);
     tb_append_v(&cm->tb, "%.2f", cm->test.elapsed_time);
@@ -290,4 +247,3 @@ static void terminal_register_cleanup(void)
     signal(SIGQUIT, signal_handler);
     signal(SIGWINCH, winch_handler);
 }
-

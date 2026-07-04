@@ -8,7 +8,7 @@
 
 // alignment messes up our alloc calculation
 #define ARENA_DEFAULT_ALIGNMENT 0
-#include "arena_single.h"   
+#include "arena_single.h"
 
 #include "random_single.h"
 
