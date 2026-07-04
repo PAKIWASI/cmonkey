@@ -8,7 +8,7 @@
 typedef enum {
     ACTION_NONE = 0,
     ACTION_CHAR,
-    ACTION_BACKSPACE,
+    ACTION_DEL_CHAR,
     ACTION_DEL_WORD,
     ACTION_RESTART,
     ACTION_END,

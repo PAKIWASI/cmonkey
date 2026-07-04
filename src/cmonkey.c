@@ -28,7 +28,7 @@ static void cmonkey_handle_input(cmonkey* cm, cmonkey_input input);
 
 
 #define FPS            60
-#define NUM_RAND_WORDS 200
+#define NUM_RAND_WORDS 200      //
 #define DEFAULT_TIME   60.f
 #define WORDS_AHEAD    40
 // TODO:
@@ -138,10 +138,16 @@ void cmonkey_cleanup_terminal(void)
 
 
 
-void cmonkey_test_new(cmonkey* cm) {}
+void cmonkey_test_new(cmonkey* cm)
+{
 
-// Keep typed[] topped up so there are always WORDS_AHEAD words past curr_word.
-static void test_refill_words(cmonkey* cm) {}
+}
+
+// Keep words[] topped up so there are always WORDS_AHEAD words past curr_word.
+static void test_refill_words(cmonkey* cm)
+{
+
+}
 
 
 static void cmonkey_handle_input(cmonkey* cm, cmonkey_input input)
@@ -154,7 +160,7 @@ static void cmonkey_handle_input(cmonkey* cm, cmonkey_input input)
         }
         break;
 
-    case ACTION_BACKSPACE:
+    case ACTION_DEL_CHAR:
         // Handle backspace
         // ... delete last char ...
         break;
@@ -219,7 +225,8 @@ void cmonkey_update(cmonkey* cm)
         draw_clear(&cm->tb, &cm->t);
     }
 
-    // TODO: get more words in queue if low
+    // TODO: get more words in cm->incoming queue if low
+    // get more words in test->word[] genvec if less than WORDS_AHEAD remain
 }
 
 void cmonkey_draw(cmonkey* cm)
