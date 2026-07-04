@@ -3,7 +3,7 @@
 
 #include "common_single.h"
 
-#define MAX_INPUTS 32
+#define MAX_INPUTS 16
 
 typedef enum {
     ACTION_NONE = 0,

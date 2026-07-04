@@ -4,8 +4,8 @@
 #include "Queue_single.h"
 #include "buffer.h"
 #include "config.h"
-#include "timer.h"
 #include "input.h"
+#include "timer.h"
 #include "wordbank.h"
 
 #define MAX_TYPED_SIZE 128
@@ -28,13 +28,13 @@ typedef enum {
 
 
 typedef struct cmonkey_test {
-    genVec words;           // genVec of Word {idx, state}
-    float  elapsed_time;    // seconds since test started
-    u32    typed_base;      // index into words[] of first visible word (scroll)
-    u32    curr_word;       // index into words[] of word being typed right now
-    u32    curr_char;       // for future cursor logic
-    u32    correct;         // committed correct word count
-    u32    incorrect;       // committed incorrect word count
+    genVec words;                      // genVec of Word {idx, state}
+    float  elapsed_time;               // seconds since test started
+    u32    typed_base;                 // index into words[] of first visible word (scroll)
+    u32    curr_word;                  // index into words[] of word being typed right now
+    u32    curr_char;                  // for future cursor logic
+    u32    correct;                    // committed correct word count
+    u32    incorrect;                  // committed incorrect word count
     char   curr_typed[MAX_TYPED_SIZE]; // what the user has typed for curr_word so far
     u32    curr_typed_len;
 } cmonkey_test;
@@ -48,12 +48,14 @@ typedef struct {
     cmonkey_conf  c;        // user settings
     cmonkey_timer timer;    // global timer for tui
     cmonkey_test  test;     // represents a single test
+    CMONKEY_STATE state;
+    float         test_time; // current total test time
     u32           rows;
     u32           cols;
     cmonkey_input inputs[MAX_INPUTS];   // storage for each frame's inputs
-    u32 input_count;                    // how many inputs captured this frame
-    CMONKEY_STATE state;
-    float         test_time; // current total test time
+    u32           input_count;          // how many inputs captured this frame
+    bool          terminal_initialized; // Track if terminal is in alt screen
+    bool          raw_mode_enabled;     // Track if raw mode is set
     bool          quit;
 } cmonkey;
 
@@ -68,7 +70,7 @@ void cmonkey_destroy(cmonkey* cm);
 void cmonkey_init_term(cmonkey* cm);
 
 // restore terminal etc
-void cmonkey_end_term(void);
+void cmonkey_cleanup_terminal(void);
 
 // per frame logic change based on user input, time etc
 void cmonkey_update(cmonkey* cm);
@@ -83,7 +85,6 @@ void cmonkey_run(cmonkey* cm);
 // test stuff
 
 void cmonkey_test_new(cmonkey* cm);
-
 
 
 

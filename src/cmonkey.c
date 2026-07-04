@@ -14,7 +14,10 @@
 #include <unistd.h>
 
 
-static volatile sig_atomic_t resize_flag = 0;
+static volatile sig_atomic_t resize_flag  = 0;
+static volatile sig_atomic_t cleanup_flag = 0;
+static struct termios        og_term;
+static bool                  og_term_saved = false;
 
 static void set_term_dims(cmonkey* cm);
 static void winch_handler(int sig);
@@ -22,8 +25,6 @@ static void signal_handler(int sig);
 static void terminal_register_cleanup(void);
 static void test_refill_words(cmonkey* cm);
 static void cmonkey_handle_input(cmonkey* cm, cmonkey_input input);
-
-static struct termios og_term;
 
 
 #define FPS            60
@@ -38,6 +39,11 @@ static struct termios og_term;
 
 void cmonkey_create(cmonkey* cm, const char* wb_path, const char* theme_path, const char* conf_path)
 {
+    // Initialize all fields to zero first
+    memset(cm, 0, sizeof(cmonkey));
+    cm->terminal_initialized = false;
+    cm->raw_mode_enabled     = false;
+
     wordbank_create(&cm->wb, wb_path, NUM_RAND_WORDS);
     CHECK_FATAL(!cm->wb.words || !cm->wb.arena, "wordbank creation failed");
 
@@ -50,9 +56,10 @@ void cmonkey_create(cmonkey* cm, const char* wb_path, const char* theme_path, co
     tb_create(&cm->tb, cm->rows, cm->cols);
     timer_begin(&cm->timer, FPS);
 
-    cm->state     = CMONKEY_WAITING;
-    cm->test_time = DEFAULT_TIME;
-    cm->quit      = false;
+    cm->state       = CMONKEY_WAITING;
+    cm->test_time   = DEFAULT_TIME;
+    cm->quit        = false;
+    cm->input_count = 0;
 
     wordbank_random_words_in_queue(&cm->wb, &cm->incoming);
     cmonkey_test_new(cm);
@@ -60,6 +67,12 @@ void cmonkey_create(cmonkey* cm, const char* wb_path, const char* theme_path, co
 
 void cmonkey_destroy(cmonkey* cm)
 {
+    // Clean up terminal if still initialized
+    if (cm->terminal_initialized) {
+        cmonkey_cleanup_terminal();
+        cm->terminal_initialized = false;
+    }
+
     wordbank_destroy(&cm->wb);
     queue_destroy_stk(&cm->incoming);
     tb_destroy(&cm->tb);
@@ -68,36 +81,90 @@ void cmonkey_destroy(cmonkey* cm)
 
 void cmonkey_init_term(cmonkey* cm)
 {
-    // set callback to trigger resize flag
+    // Save original terminal state ONCE
+    if (!og_term_saved) {
+        if (tcgetattr(STDIN_FILENO, &og_term) == -1) {
+            WARN("tcgetattr failed");
+            return;
+        }
+        og_term_saved = true;
+    }
+
+    // Set up signal handlers
     struct sigaction sa = {.sa_handler = winch_handler};
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
     sigaction(SIGWINCH, &sa, NULL);
 
+    // Setup cleanup handlers
     terminal_register_cleanup();
 
-    CHECK_WARN_RET(tcgetattr(STDIN_FILENO, &og_term) == -1, , "tcgetattr failed");
+    // Enable raw mode
+    struct termios raw = og_term;
+    raw.c_lflag &= (tcflag_t) ~(ECHO | ICANON);
+    raw.c_cc[VMIN]  = 0; // Don't wait for minimum bytes
+    raw.c_cc[VTIME] = 0; // Don't wait for timeout
 
-    struct termios raw = og_term; // preserve original state
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) {
+        WARN("setting term attr failed");
+        return;
+    }
+    cm->raw_mode_enabled = true;
 
-    raw.c_lflag &= (tcflag_t) ~(ECHO | ICANON); // set our own
-    CHECK_WARN_RET(tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1, , "setting term attr failed");
-
-    // must be after raw mode is applied
+    // Must be after raw mode is applied
     input_init();
 
-    tb_append_cstr(&cm->tb, "\033[?1049h"); // enter alternate screen
-    tb_append_cstr(&cm->tb, CURSOR_HIDE);   // we don't use the actual cursor
+    // Enter alternate screen and hide cursor
+    tb_append_cstr(&cm->tb, "\033[?1049h");
+    tb_append_cstr(&cm->tb, CURSOR_HIDE);
 
-    draw_clear(&cm->tb, &cm->t); // clear screen with theme
-    tb_flush(&cm->tb);           // send the commands
+    draw_clear(&cm->tb, &cm->t);
+    tb_flush(&cm->tb);
+
+    cm->terminal_initialized = true;
 }
 
-void cmonkey_end_term(void)
+// Centralized cleanup function
+void cmonkey_cleanup_terminal(void)
 {
-    // show cursor, exit alt screen
+    // Restore terminal even if we crash
     const char* cleanup = "\033[0m\033[?25h\033[?1049l";
     write(STDOUT_FILENO, cleanup, strlen(cleanup));
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &og_term); // set back original state
+
+    if (og_term_saved) {
+        tcsetattr(STDIN_FILENO, TCSAFLUSH, &og_term);
+    }
 }
+
+static void signal_handler(int sig)
+{
+    (void)sig;
+    // Just set a flag - don't do any unsafe operations
+    // The main loop will handle cleanup
+    cleanup_flag = 1;
+
+    // But we still need to restore terminal for the user
+    // Use write() which is async-signal-safe
+    const char* cleanup = "\033[0m\033[?25h\033[?1049l";
+    write(STDOUT_FILENO, cleanup, strlen(cleanup));
+
+    // Don't call tcsetattr here - it's not async-signal-safe
+    // Instead, let the main loop handle it, or just exit
+    _exit(1); // Force exit after minimal cleanup
+}
+
+static void terminal_register_cleanup(void)
+{
+    struct sigaction sa = {.sa_handler = signal_handler};
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0; // Don't use SA_RESTART - we want to interrupt syscalls
+
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGTERM, &sa, NULL);
+    sigaction(SIGQUIT, &sa, NULL);
+    // SIGWINCH is handled separately
+}
+
 
 void cmonkey_test_new(cmonkey* cm) {}
 
@@ -231,19 +298,19 @@ static void winch_handler(int sig)
     resize_flag = 1;
 }
 
-static void signal_handler(int sig)
-{
-    const char* cleanup = "\033[0m\033[?25h\033[?1049l";
-    write(STDOUT_FILENO, cleanup, strlen(cleanup));
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &og_term);
-    signal(sig, SIG_DFL);
-    raise(sig);
-}
-
-static void terminal_register_cleanup(void)
-{
-    signal(SIGINT, signal_handler);
-    signal(SIGTERM, signal_handler);
-    signal(SIGQUIT, signal_handler);
-    signal(SIGWINCH, winch_handler);
-}
+// static void signal_handler(int sig)
+// {
+//     const char* cleanup = "\033[0m\033[?25h\033[?1049l";
+//     write(STDOUT_FILENO, cleanup, strlen(cleanup));
+//     tcsetattr(STDIN_FILENO, TCSAFLUSH, &og_term);
+//     signal(sig, SIG_DFL);
+//     raise(sig);
+// }
+//
+// static void terminal_register_cleanup(void)
+// {
+//     signal(SIGINT, signal_handler);
+//     signal(SIGTERM, signal_handler);
+//     signal(SIGQUIT, signal_handler);
+//     signal(SIGWINCH, winch_handler);
+// }
