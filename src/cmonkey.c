@@ -90,7 +90,7 @@ void cmonkey_init_term(cmonkey* cm)
         og_term_saved = true;
     }
 
-    // Set up signal handlers
+    // Set up terminal window resize handler
     struct sigaction sa = {.sa_handler = winch_handler};
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = 0;
@@ -136,34 +136,6 @@ void cmonkey_cleanup_terminal(void)
     }
 }
 
-static void signal_handler(int sig)
-{
-    (void)sig;
-    // Just set a flag - don't do any unsafe operations
-    // The main loop will handle cleanup
-    cleanup_flag = 1;
-
-    // But we still need to restore terminal for the user
-    // Use write() which is async-signal-safe
-    const char* cleanup = "\033[0m\033[?25h\033[?1049l";
-    write(STDOUT_FILENO, cleanup, strlen(cleanup));
-
-    // Don't call tcsetattr here - it's not async-signal-safe
-    // Instead, let the main loop handle it, or just exit
-    _exit(1); // Force exit after minimal cleanup
-}
-
-static void terminal_register_cleanup(void)
-{
-    struct sigaction sa = {.sa_handler = signal_handler};
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = 0; // Don't use SA_RESTART - we want to interrupt syscalls
-
-    sigaction(SIGINT, &sa, NULL);
-    sigaction(SIGTERM, &sa, NULL);
-    sigaction(SIGQUIT, &sa, NULL);
-    // SIGWINCH is handled separately
-}
 
 
 void cmonkey_test_new(cmonkey* cm) {}
@@ -209,11 +181,17 @@ static void cmonkey_handle_input(cmonkey* cm, cmonkey_input input)
 
 void cmonkey_update(cmonkey* cm)
 {
+    // Check for cleanup signal
+    if (cleanup_flag) {
+        cm->quit = true;
+        return;
+    }
+
     // tick elapsed time while test is running
     if (cm->state == CMONKEY_UNDERGOING) {
         cm->test.elapsed_time += cm->timer.elapsed;
         if (cm->test.elapsed_time >= cm->test_time) {
-            cm->test.elapsed_time = cm->test_time; // it sometimes showed some milisec above
+            cm->test.elapsed_time = cm->test_time;
             cm->state             = CMONKEY_FINISHED;
         }
     }
@@ -226,12 +204,22 @@ void cmonkey_update(cmonkey* cm)
         cmonkey_handle_input(cm, cm->inputs[i]);
     }
 
-    // handle terminal resize
+    // Handle terminal resize
     if (resize_flag) {
         resize_flag = 0;
+
+        // Get new dimensions
         set_term_dims(cm);
-        // TODO: tb resize if new dims exceed original allocation ?
+
+        // Destroy and recreate buffer with new size
+        tb_destroy(&cm->tb);
+        tb_create(&cm->tb, cm->rows, cm->cols);
+
+        // Force full redraw next frame
+        draw_clear(&cm->tb, &cm->t);
     }
+
+    // TODO: get more words in queue if low
 }
 
 void cmonkey_draw(cmonkey* cm)
@@ -292,25 +280,39 @@ static void set_term_dims(cmonkey* cm)
     cm->cols = ws.ws_col;
 }
 
+
+static void signal_handler(int sig)
+{
+    (void)sig;
+    // Just set a flag - don't do any unsafe operations
+    // The main loop will handle cleanup
+    cleanup_flag = 1;
+
+    // But we still need to restore terminal for the user
+    // Use write() which is async-signal-safe
+    const char* cleanup = "\033[0m\033[?25h\033[?1049l";
+    write(STDOUT_FILENO, cleanup, strlen(cleanup));
+
+    // Don't call tcsetattr here - it's not async-signal-safe
+    // Instead, let the main loop handle it, or just exit
+    _exit(1); // Force exit after minimal cleanup
+}
+
+// when you get Ctrl-C
+static void terminal_register_cleanup(void)
+{
+    struct sigaction sa = {.sa_handler = signal_handler};
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0; // Don't use SA_RESTART - we want to interrupt syscalls
+
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGTERM, &sa, NULL);
+    sigaction(SIGQUIT, &sa, NULL);
+    // SIGWINCH is handled separately
+}
+
 static void winch_handler(int sig)
 {
     (void)sig;
     resize_flag = 1;
 }
-
-// static void signal_handler(int sig)
-// {
-//     const char* cleanup = "\033[0m\033[?25h\033[?1049l";
-//     write(STDOUT_FILENO, cleanup, strlen(cleanup));
-//     tcsetattr(STDIN_FILENO, TCSAFLUSH, &og_term);
-//     signal(sig, SIG_DFL);
-//     raise(sig);
-// }
-//
-// static void terminal_register_cleanup(void)
-// {
-//     signal(SIGINT, signal_handler);
-//     signal(SIGTERM, signal_handler);
-//     signal(SIGQUIT, signal_handler);
-//     signal(SIGWINCH, winch_handler);
-// }

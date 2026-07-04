@@ -18,12 +18,13 @@ void input_init(void)
     if (fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK) == -1) {   // whatever the flags were, plus O_NONBLOCK
         WARN("fcntl F_SETFL O_NONBLOCK failed");
     }
+    // Now read() won't block if no input - returns immediately
 }
 
 static cmonkey_input process_char(unsigned char ch)
 {
     cmonkey_input result = {ACTION_NONE, 0};
-    
+
     switch (ch) {
         case 3:   // Ctrl-C
             result.action = ACTION_END;
@@ -46,7 +47,7 @@ static cmonkey_input process_char(unsigned char ch)
             }
             break;
     }
-    
+
     return result;
 }
 
@@ -54,11 +55,12 @@ u32 input_read_all(cmonkey_input* buffer)
 {
     unsigned char raw[MAX_INPUTS * 2];
     ssize_t n = read(STDIN_FILENO, raw, sizeof(raw));
-    
+    // If keys were pressed: n > 0, raw contains the bytes
+    // If no keys: n = 0 (or -1 with errno EAGAIN)
     if (n <= 0) {
         return 0;
     }
-    
+
     u32 count = 0;
     for (ssize_t i = 0; i < n && count < MAX_INPUTS; i++) {
         cmonkey_input input = process_char(raw[i]);

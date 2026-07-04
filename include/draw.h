@@ -1,7 +1,6 @@
 #ifndef CMONKEY_DRAW
 #define CMONKEY_DRAW
 
-#include "Queue_single.h"
 #include "buffer.h"
 #include "config.h"
 #include "wordbank.h"
@@ -144,7 +143,7 @@ typedef struct cmonkey_test cmonkey_test;
 /* TODO:
  * Draw the typing-test word field.
  *
- * Reads from test->typed[] starting at test->typed_base.
+ * Reads from test->words[] starting at test->typed_base.
  * Colours:
  *   committed correct   → t->correct
  *   committed incorrect → t->incorrect

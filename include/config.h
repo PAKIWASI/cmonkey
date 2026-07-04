@@ -51,10 +51,6 @@ typedef enum {
 
 
 typedef struct {
-    /* for later
-    u32 trail_len;
-    float trail_decay_ms;
-    */
     BORDER_STYLE border_style;
     CURSOR_STYLE cursor_style;
 } cmonkey_conf;
