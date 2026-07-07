@@ -31,8 +31,7 @@ set(VALID_BUILD_TYPES Debug Release DebugNoSan)
 set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS ${VALID_BUILD_TYPES})
 
 # Release: full optimisation
-set(CMAKE_C_FLAGS_RELEASE                           # this flag doesn't work in debug with Asan
-"-O3 -DNDEBUG")
+set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "")
 
 
