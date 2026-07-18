@@ -1,4 +1,7 @@
 #include "timer.h"
+#include "common_single.h"
+#include <bits/time.h>
+#include <time.h>
 
 
 // time difference as float seconds

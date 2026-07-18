@@ -1,6 +1,7 @@
 #include "cmonkey.h"
 #include "Queue_single.h"
 #include "buffer.h"
+#include "config.h"
 #include "draw.h"
 #include "input.h"
 #include "timer.h"

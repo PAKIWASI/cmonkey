@@ -1,5 +1,7 @@
 #include "draw.h"
+#include "Queue_single.h"
 #include "buffer.h"
+#include "common_single.h"
 #include "config.h"
 #include "wc_macros_single.h"
 #include "wordbank.h"

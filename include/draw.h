@@ -1,7 +1,9 @@
 #ifndef CMONKEY_DRAW
 #define CMONKEY_DRAW
 
+#include "Queue_single.h"
 #include "buffer.h"
+#include "common_single.h"
 #include "config.h"
 #include "wordbank.h"
 
